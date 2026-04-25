@@ -43,7 +43,7 @@ export default function Hero() {
                 transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
               >
-                Du monolithe
+                Une intégration
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 24 }}
@@ -51,8 +51,7 @@ export default function Hero() {
                 transition={{ delay: 0.35, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
               >
-                <span className="text-ink-500">BizTalk au</span>{" "}
-                <span className="display-italic text-lumina">cloud-native</span>
+                <span className="display-italic text-lumina">event-driven</span>
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 24 }}
@@ -60,7 +59,7 @@ export default function Hero() {
                 transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="block text-ink-500"
               >
-                Azure.
+                de bout-en-bout.
               </motion.span>
             </h1>
           </div>
@@ -72,9 +71,9 @@ export default function Hero() {
             className="md:col-span-3 md:pb-4"
           >
             <p className="text-ink-700 text-sm leading-relaxed border-l border-lumina pl-4">
-              Migration d'une architecture d'intégration EAI monolithique
-              vers un système <span className="text-ink-900">100% serverless,
-              event-driven et passwordless</span> sur Microsoft Azure.
+              Une POC d'architecture EAI moderne :{" "}
+              <span className="text-ink-900">100% serverless, event-driven et passwordless</span>{" "}
+              sur Microsoft Azure, instrumentée bout-en-bout.
             </p>
           </motion.div>
         </div>

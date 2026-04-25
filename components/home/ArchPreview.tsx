@@ -14,13 +14,14 @@ export default function ArchPreview() {
           </div>
           <div className="md:col-span-9">
             <h2 className="display-tight text-display-md text-balance">
-              Une commande franchit{" "}
-              <span className="display-italic text-lumina">12 ressources Azure</span>
-              <br className="hidden md:block" /> en moins d'une seconde.
+              Trois flux,{" "}
+              <span className="display-italic text-lumina">douze ressources</span>,
+              <br className="hidden md:block" /> une seule source de vérité.
             </h2>
             <p className="text-ink-700 mt-6 max-w-2xl">
-              Chaque hop est observable, chaque transformation est testable, chaque
-              échec est rejouable. Cliquez sur un composant pour voir sa configuration réelle.
+              L'ingestion descend dans deux pipelines parallèles : la chaîne data
+              (consommation, persistence, analytique Zero-Copy) et la chaîne résilience
+              (DLQ, capture, alerte). Cliquez sur un composant pour voir sa configuration réelle.
             </p>
           </div>
         </div>
@@ -36,9 +37,9 @@ export default function ArchPreview() {
 
           <div className="mt-8 pt-8 border-t border-hairline flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <p className="font-mono text-xs text-ink-500">
-              <span className="text-lumina">●</span> Producteur ·{" "}
-              <span className="text-signal">●</span> Consommateur ·{" "}
-              <span className="text-ember">●</span> Dead-Letter Queue
+              <span className="text-lumina">●</span> Ingestion ·{" "}
+              <span className="text-signal">●</span> Données &amp; analytique ·{" "}
+              <span className="text-ember">●</span> Résilience &amp; DLQ
             </p>
             <Link
               href="/architecture"
@@ -54,76 +55,145 @@ export default function ArchPreview() {
   );
 }
 
+// Compact 3-lane diagram mirroring the architecture page layout.
+// Lane 1 (lumina, y=100):  Client → APIM → Producer → Service Bus
+// Lane 2 (signal, y=220):  Consumer Fn → gold-orders → ADF → Fabric
+// Lane 3 (ember,  y=340):  DLQ Fn → failed-orders → Event Grid → Logic App
+
 function FlowSVG() {
   return (
     <svg
-      viewBox="0 0 1200 360"
+      viewBox="0 0 1300 420"
       className="w-full h-auto"
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        {/* Animated dot moving along the path */}
-        <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#D9F84A" stopOpacity="0" />
-          <stop offset="100%" stopColor="#D9F84A" stopOpacity="1" />
-        </linearGradient>
+        <pattern id="dotgrid-preview" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="0.75" cy="0.75" r="0.6" fill="rgba(250,247,240,0.07)" />
+        </pattern>
+        <marker id="prev-arrow-l" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto">
+          <path d="M0,0 L0,5 L7,2.5 z" fill="#D9F84A" opacity="0.7" />
+        </marker>
+        <marker id="prev-arrow-s" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto">
+          <path d="M0,0 L0,5 L7,2.5 z" fill="#7BD8B5" opacity="0.7" />
+        </marker>
+        <marker id="prev-arrow-e" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto">
+          <path d="M0,0 L0,5 L7,2.5 z" fill="#F47435" opacity="0.7" />
+        </marker>
       </defs>
 
-      {/* Background dotted grid */}
-      <pattern id="dotgrid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-        <circle cx="1" cy="1" r="0.5" fill="rgba(250,247,240,0.08)" />
-      </pattern>
-      <rect width="1200" height="360" fill="url(#dotgrid)" />
+      <rect width="1300" height="420" fill="url(#dotgrid-preview)" />
 
-      {/* Connection lines */}
-      <g stroke="rgba(250,247,240,0.2)" strokeWidth="1" strokeDasharray="4 4" fill="none">
-        <line x1="180" y1="120" x2="320" y2="120" />
-        <line x1="460" y1="120" x2="600" y2="120" />
-        <line x1="740" y1="120" x2="880" y2="120" />
-        <line x1="1020" y1="120" x2="1160" y2="120" />
-        {/* DLQ branch */}
-        <path d="M 670 145 Q 670 230 600 230 L 460 230" />
-        <line x1="320" y1="230" x2="180" y2="230" />
-      </g>
+      {/* Lane labels */}
+      <text x={40} y={50} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#D9F84A" letterSpacing="3" opacity="0.85">
+        ① INGESTION
+      </text>
+      <text x={40} y={170} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#7BD8B5" letterSpacing="3" opacity="0.85">
+        ② DONNÉES + ANALYTIQUE
+      </text>
+      <text x={40} y={290} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" letterSpacing="3" opacity="0.85">
+        ③ RÉSILIENCE
+      </text>
 
-      {/* Animated flow dot */}
-      <circle r="4" fill="#D9F84A">
+      {/* Lane separators */}
+      <line x1="40" y1="160" x2="1260" y2="160" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      <line x1="40" y1="280" x2="1260" y2="280" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+
+      {/* === Lane 1 internal connections === */}
+      <line x1="146" y1="100" x2="234" y2="100" stroke="#D9F84A" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-l)" />
+      <line x1="296" y1="100" x2="384" y2="100" stroke="#D9F84A" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-l)" />
+      <line x1="446" y1="100" x2="534" y2="100" stroke="#D9F84A" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-l)" />
+
+      {/* === Service Bus → Consumer Fn (lane 2) === */}
+      <path
+        d="M 596 100 Q 670 100 670 150 L 670 199"
+        fill="none"
+        stroke="#7BD8B5"
+        strokeWidth="1"
+        opacity="0.65"
+        markerEnd="url(#prev-arrow-s)"
+      />
+
+      {/* === Service Bus → DLQ Fn (lane 3) === */}
+      <path
+        d="M 596 115 Q 660 115 670 200 L 670 319"
+        fill="none"
+        stroke="#F47435"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.65"
+        markerEnd="url(#prev-arrow-e)"
+      />
+      <text x={685} y={245} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.75">
+        × 3 retries
+      </text>
+
+      {/* === Lane 2 internal connections === */}
+      <line x1="732" y1="220" x2="820" y2="220" stroke="#7BD8B5" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-s)" />
+      <line x1="882" y1="220" x2="970" y2="220" stroke="#7BD8B5" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-s)" />
+      <line x1="1032" y1="220" x2="1120" y2="220" stroke="#7BD8B5" strokeWidth="1" opacity="0.6" strokeDasharray="3 3" markerEnd="url(#prev-arrow-s)" />
+
+      {/* === Lane 3 internal connections === */}
+      <line x1="732" y1="340" x2="820" y2="340" stroke="#F47435" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-e)" />
+      <line x1="882" y1="340" x2="970" y2="340" stroke="#F47435" strokeWidth="1" opacity="0.6" strokeDasharray="3 3" markerEnd="url(#prev-arrow-e)" />
+      <line x1="1032" y1="340" x2="1120" y2="340" stroke="#F47435" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-e)" />
+
+      {/* === Animated flow dots === */}
+      {/* Happy + analytics path */}
+      <circle r="3.5" fill="#D9F84A">
         <animateMotion
           dur="6s"
           repeatCount="indefinite"
-          path="M 180,120 L 320,120 L 460,120 L 600,120 L 740,120 L 880,120 L 1020,120 L 1160,120"
+          path="M 100,100 L 565,100 Q 670,100 670,220 L 1150,220"
         />
         <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite" />
       </circle>
+      {/* Resilience path */}
+      <circle r="3" fill="#F47435">
+        <animateMotion
+          dur="6s"
+          repeatCount="indefinite"
+          begin="2s"
+          path="M 565,115 Q 670,115 670,340 L 1150,340"
+        />
+        <animate attributeName="opacity" values="0;1;1;0" dur="6s" begin="2s" repeatCount="indefinite" />
+      </circle>
 
-      {/* Nodes - top row (happy path) */}
-      <Node x={120} y={120} label="Client" sub="E-commerce" tone="muted" />
-      <Node x={260} y={120} label="APIM" sub="apim-lumina" tone="lumina" />
-      <Node x={400} y={120} label="Function" sub="Producer" tone="lumina" />
-      <Node x={540} y={120} label="Service Bus" sub="sbt-lumina-orders" tone="lumina" />
-      <Node x={680} y={120} label="Function" sub="Consumer" tone="signal" />
-      <Node x={820} y={120} label="ADLS Gen2" sub="gold-orders" tone="signal" />
-      <Node x={960} y={120} label="Data Factory" sub="JSON → Parquet" tone="signal" />
-      <Node x={1100} y={120} label="Fabric" sub="Zero-Copy" tone="signal" />
+      {/* === NODES === */}
+      {/* Lane 1 — Ingestion (lumina) */}
+      <Node x={100} y={100} label="Client" sub="E-commerce" tone="muted" />
+      <Node x={265} y={100} label="APIM" sub="apim-lumina" tone="lumina" />
+      <Node x={415} y={100} label="Producer Fn" sub="EcommerceOrderFn" tone="lumina" />
+      <Node x={565} y={100} label="Service Bus" sub="sbt-lumina-orders" tone="lumina" />
 
-      {/* DLQ branch */}
-      <Node x={540} y={230} label="DLQ" sub="$DeadLetterQueue" tone="ember" />
-      <Node x={400} y={230} label="DLQ Function" sub="failed-orders" tone="ember" />
-      <Node x={260} y={230} label="Event Grid" sub="BlobCreated" tone="ember" />
-      <Node x={120} y={230} label="Logic App" sub="Email alerte" tone="ember" />
+      {/* Lane 2 — Data + Analytics (signal) */}
+      <Node x={700} y={220} label="Consumer Fn" sub="OrderProcessor" tone="signal" />
+      <Node x={850} y={220} label="Data Lake" sub="gold-orders" tone="signal" />
+      <Node x={1000} y={220} label="Data Factory" sub="JSON → Parquet" tone="signal" />
+      <Node x={1150} y={220} label="Fabric" sub="Zero-Copy" tone="signal" />
 
-      {/* Section labels */}
-      <text x={600} y={30} textAnchor="middle" className="text-[10px]" fontFamily="monospace" fill="rgba(250,247,240,0.4)" letterSpacing="2">
-        — FLUX TRANSACTIONNEL · HAPPY PATH —
-      </text>
-      <text x={300} y={310} textAnchor="middle" className="text-[10px]" fontFamily="monospace" fill="rgba(244,116,53,0.5)" letterSpacing="2">
-        — RÉSILIENCE · DEAD-LETTER QUEUE —
-      </text>
+      {/* Lane 3 — Resilience (ember) */}
+      <Node x={700} y={340} label="DLQ Fn" sub="FailedOrderFn" tone="ember" />
+      <Node x={850} y={340} label="failed-orders" sub="container" tone="ember" />
+      <Node x={1000} y={340} label="Event Grid" sub="BlobCreated" tone="ember" />
+      <Node x={1150} y={340} label="Logic App" sub="Email alerte" tone="ember" />
     </svg>
   );
 }
 
-function Node({ x, y, label, sub, tone }: { x: number; y: number; label: string; sub: string; tone: "lumina" | "signal" | "ember" | "muted" }) {
+function Node({
+  x,
+  y,
+  label,
+  sub,
+  tone,
+}: {
+  x: number;
+  y: number;
+  label: string;
+  sub: string;
+  tone: "lumina" | "signal" | "ember" | "muted";
+}) {
   const colorMap = {
     lumina: "#D9F84A",
     signal: "#7BD8B5",
@@ -135,13 +205,22 @@ function Node({ x, y, label, sub, tone }: { x: number; y: number; label: string;
 
   return (
     <g transform={`translate(${x}, ${y})`}>
-      <rect x={-50} y={-25} width={100} height={50}
-        fill="rgba(10,9,8,0.8)"
+      <rect
+        x={-46}
+        y={-22}
+        width={92}
+        height={44}
+        fill="rgba(10,9,8,0.92)"
         stroke={c}
-        strokeWidth="0.75" />
-      <circle cx={-40} cy={-15} r={2.5} fill={c} opacity={isMuted ? 0.6 : 1} />
-      <text textAnchor="middle" y={-2} fontSize="11" fontFamily="DM Sans, sans-serif" fontWeight="500" fill="#FAF7F0">{label}</text>
-      <text textAnchor="middle" y={12} fontSize="8.5" fontFamily="JetBrains Mono, monospace" fill="rgba(250,247,240,0.5)">{sub}</text>
+        strokeWidth="0.85"
+      />
+      <circle cx={-37} cy={-13} r={2.25} fill={c} opacity={isMuted ? 0.6 : 1} />
+      <text textAnchor="middle" y={-1} fontSize="10.5" fontFamily="DM Sans, sans-serif" fontWeight="500" fill="#FAF7F0">
+        {label}
+      </text>
+      <text textAnchor="middle" y={11} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="rgba(250,247,240,0.5)">
+        {sub}
+      </text>
     </g>
   );
 }

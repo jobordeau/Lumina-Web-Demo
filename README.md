@@ -1,11 +1,11 @@
-# Lumina — Démo de migration BizTalk → Azure
+# Lumina — Architecture d'intégration cloud-native sur Azure
 
-Site Next.js de présentation pour la **preuve de concept Lumina Integration**.
-Architecture cloud-native déployée sur Microsoft Azure : 12 ressources,
-3 Azure Functions .NET 8, Service Bus avec DLQ, Data Lake Gen2, Microsoft Fabric.
+Site de présentation pour la **POC Lumina Integration** — une preuve de concept
+d'architecture EAI moderne sur Microsoft Azure : 12 ressources, 3 Azure Functions
+.NET 8, Service Bus avec Dead-Letter Queue, Data Lake Gen2, Microsoft Fabric.
 
 > Ce site est un **outil de présentation**. Il n'appelle aucune API Azure réelle —
-> toutes les démonstrations sont 100% côte-client et reproductibles offline.
+> toutes les démonstrations sont 100% côté client et reproductibles offline.
 
 ---
 
@@ -15,35 +15,35 @@ Architecture cloud-native déployée sur Microsoft Azure : 12 ressources,
 
 - **Node.js 18.17+** ([télécharger](https://nodejs.org/))
 - **npm** (livré avec Node.js)
-- Un terminal (PowerShell, Terminal macOS, bash Linux — n'importe lequel)
+- Un terminal (PowerShell, Terminal macOS, bash Linux)
 
-### En 3 commandes
+### Démarrer en deux commandes
 
 ```bash
-# 1. Installer les dépendances (~2 min, à faire une seule fois)
+# 1. Installer les dépendances (une seule fois, ~1 min)
 npm install
 
 # 2. Démarrer le serveur de développement
 npm run dev
-
-# 3. Ouvrir http://localhost:3000 dans le navigateur
 ```
 
-C'est tout. Le site se rafraîchit automatiquement à chaque modification.
+Le site est ensuite disponible sur **http://localhost:3000**. Il se rafraîchit
+automatiquement à chaque modification de fichier.
 
 ---
 
 ## 🚀 Déployer sur Vercel
 
-Vercel est l'hébergeur officiel de Next.js. Le déploiement est gratuit et prend **2 minutes**.
+Vercel est l'hébergeur officiel de Next.js. Le déploiement est gratuit et prend
+**moins de 2 minutes**.
 
-### Méthode A — Via GitHub (recommandé pour la démo en entretien)
+### Méthode A — Via GitHub (recommandée)
 
 1. Pousser ce dossier sur un repo GitHub :
    ```bash
    git init
    git add .
-   git commit -m "Lumina demo site"
+   git commit -m "Initial commit"
    git branch -M main
    git remote add origin https://github.com/<votre-user>/lumina-demo.git
    git push -u origin main
@@ -56,15 +56,16 @@ Vercel est l'hébergeur officiel de Next.js. Le déploiement est gratuit et pren
 4. Cliquer **Deploy**. Au bout de ~90 secondes, le site est en ligne sur une URL
    du type `lumina-demo-xxx.vercel.app`.
 
-5. (Optionnel) Configurer un domaine custom dans Project Settings → Domains.
+5. *(Optionnel)* Configurer un domaine custom dans Project Settings → Domains.
 
 ### Méthode B — Via la CLI Vercel
 
 ```bash
 npm i -g vercel
 vercel
-# Suivre les prompts. Première fois : créer un compte, lier le projet.
 ```
+
+Suivre les prompts. Première utilisation : créer un compte, lier le projet.
 
 ---
 
@@ -78,7 +79,6 @@ lumina-demo/
 │   ├── globals.css               # Variables CSS, thème, utilitaires
 │   ├── architecture/page.tsx     # Diagramme interactif des ressources
 │   ├── demo/page.tsx             # 🚧 À venir — démo de flux animée
-│   ├── comparison/page.tsx       # 🚧 À venir — BizTalk vs Azure
 │   ├── cost/page.tsx             # 🚧 À venir — calculateur TCO
 │   └── code/page.tsx             # 🚧 À venir — snippets C# / Terraform
 │
@@ -88,13 +88,13 @@ lumina-demo/
 │   ├── home/                     # Sections de la landing
 │   │   ├── Hero.tsx              # Titre principal + CTA
 │   │   ├── KeyStats.tsx          # 4 chiffres marquants
-│   │   ├── Story.tsx             # Récit BizTalk vs Azure
-│   │   ├── ArchPreview.tsx       # Aperçu animé du flow
+│   │   ├── Story.tsx             # « L'anatomie d'un message » — parcours en 6 étapes
+│   │   ├── ArchPreview.tsx       # Aperçu animé du flow (3 swimlanes)
 │   │   ├── Patterns.tsx          # 6 décisions d'architecture
 │   │   ├── TechStack.tsx         # Inventaire technique
 │   │   └── ClosingCTA.tsx        # Appel final vers la démo
 │   ├── architecture/
-│   │   ├── ArchDiagram.tsx       # SVG interactif (cliquer sur un composant)
+│   │   ├── ArchDiagram.tsx       # SVG interactif (4 swimlanes, 14 nœuds)
 │   │   └── ResourcePanel.tsx     # Panneau de détails à droite
 │   └── shared/ComingSoon.tsx     # Template pour les pages à venir
 │
@@ -116,9 +116,9 @@ lumina-demo/
 |-------|-------|-------------|
 | `bg-ink-0` | Fond principal | `#0A0908` (noir chaud) |
 | `text-ink-900` | Texte principal | `#FAF7F0` (paper white) |
-| `text-lumina` | Accent principal | `#D9F84A` (chartreuse) |
-| `text-ember` | Erreurs · DLQ | `#F47435` (orange chaud) |
-| `text-signal` | Données · analytique | `#7BD8B5` (mint) |
+| `text-lumina` | Accent — ingestion / orchestration | `#D9F84A` (chartreuse) |
+| `text-signal` | Données / analytique | `#7BD8B5` (mint) |
+| `text-ember` | Erreurs / DLQ | `#F47435` (orange chaud) |
 
 **Typographies** (chargées automatiquement via `next/font/google`) :
 - **Fraunces** — display, italique éditoriale
@@ -163,30 +163,5 @@ npm run lint     # Vérifie le code avec ESLint Next.js
 - **Lucide React** — icônes
 - **next/font** — chargement optimisé des fonts Google
 
-Aucune dépendance backend. Le site est entièrement statique côté contenu,
+Aucune dépendance backend. Le site est entièrement statique côté contenu ;
 les "démos interactives" sont des simulations React côté client.
-
----
-
-## ✅ Checklist avant entretien
-
-- [ ] `npm install` puis `npm run build` doit passer sans erreur
-- [ ] Tester en local avec `npm run dev`
-- [ ] Vérifier les pages : `/`, `/architecture`, et que la nav répond
-- [ ] Pousser sur GitHub + déployer sur Vercel
-- [ ] Vérifier l'URL Vercel sur mobile (responsive)
-- [ ] Préparer le pitch : ouvrir la démo en partage d'écran, commencer par
-  la landing puis dérouler vers l'architecture interactive
-
----
-
-## 📝 Notes pour le présentateur
-
-Cette interface a été générée par IA pour valoriser le travail backend de la POC.
-Le code C#, l'infrastructure Terraform, et les Azure Functions sont 100% écrits
-manuellement et déployés en production sur le tenant Azure réel.
-
-**À mentionner en entretien :**
-- Le diagramme interactif reflète exactement la topologie Terraform
-- Les noms de ressources affichés (`apim-lumina-dev-jobordeau`, etc.) sont les vrais
-- La configuration affichée par ressource correspond à `infrastructure/main.tf`

@@ -24,9 +24,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumina — Migration BizTalk vers Azure",
+  title: "Lumina — Architecture d'intégration cloud-native sur Azure",
   description:
-    "Preuve de Concept d'une architecture d'intégration cloud-native, serverless et event-driven sur Microsoft Azure.",
+    "Preuve de Concept d'une architecture d'intégration événementielle, serverless et passwordless sur Microsoft Azure.",
 };
 
 export default function RootLayout({

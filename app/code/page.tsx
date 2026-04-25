@@ -3,7 +3,7 @@ import ComingSoon from "@/components/shared/ComingSoon";
 export default function CodePage() {
   return (
     <ComingSoon
-      chapter="Chapitre 06 · Code & Infrastructure"
+      chapter="Chapitre 05 · Code & Infrastructure"
       title="Le code C#, le Terraform, sans fioritures."
       italicWord="le Terraform"
       prelude="Une visite guidée du code source. Les snippets-clés en C# .NET 8 (mapping canonique, FluentValidation, DefaultAzureCredential), les ressources Terraform les plus structurantes (RBAC, Service Bus avec DLQ, Data Lake Gen2 avec HNS), et le workflow GitHub Actions qui déploie tout en OIDC sans secret stocké."

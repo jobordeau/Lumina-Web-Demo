@@ -139,7 +139,7 @@ export const resources: AzureResource[] = [
     name: "la-lumina-workflow-dev-jobordeau",
     type: "Azure Logic App",
     category: "orchestration",
-    role: "Orchestration low-code (équivalent BizTalk Orchestration)",
+    role: "Orchestration low-code event-driven",
     description:
       "Déclenchée par Event Grid. Lit le fichier d'erreur via la connection azureblob, parse le JSON, et envoie un email d'alerte aux équipes via Office365.",
     config: [

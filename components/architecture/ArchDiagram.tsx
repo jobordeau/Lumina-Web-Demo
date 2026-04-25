@@ -1,13 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
-import { resources, type AzureResource } from "@/lib/data/resources";
+import { resources } from "@/lib/data/resources";
 import ResourcePanel from "./ResourcePanel";
 
 export default function ArchDiagram() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [animating, setAnimating] = useState(true);
 
   const selected = selectedId
@@ -23,8 +22,8 @@ export default function ArchDiagram() {
         <div className="overflow-x-auto p-4 md:p-6">
           <DiagramSVG
             onSelect={setSelectedId}
-            onHover={setHoverId}
-            hoverId={hoverId}
+            onHover={setHoveredId}
+            hoveredId={hoveredId}
             selectedId={selectedId}
             animating={animating}
           />
@@ -80,10 +79,10 @@ function DiagramHeader({
 function DiagramLegend() {
   return (
     <div className="border-t border-hairline px-6 py-4 flex flex-wrap items-center gap-6 text-xs">
-      <LegendItem color="#D9F84A" label="Producteur" />
-      <LegendItem color="#7BD8B5" label="Consommateur · Données" />
+      <LegendItem color="#D9F84A" label="Ingestion · orchestration" />
+      <LegendItem color="#7BD8B5" label="Données · analytique" />
       <LegendItem color="#F47435" label="Résilience · DLQ" />
-      <LegendItem color="rgba(250,247,240,0.5)" label="Cross-cutting" dashed />
+      <LegendItem color="rgba(250,247,240,0.5)" label="Transverse" dashed />
       <span className="ml-auto font-mono text-[0.65rem] text-ink-500 tracking-widest uppercase">
         ↳ Cliquez sur un composant
       </span>
@@ -91,7 +90,15 @@ function DiagramLegend() {
   );
 }
 
-function LegendItem({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
+function LegendItem({
+  color,
+  label,
+  dashed,
+}: {
+  color: string;
+  label: string;
+  dashed?: boolean;
+}) {
   return (
     <div className="flex items-center gap-2 text-ink-500">
       {dashed ? (
@@ -107,6 +114,30 @@ function LegendItem({ color, label, dashed }: { color: string; label: string; da
 }
 
 // ===== The big SVG diagram =====
+//
+// LANE LAYOUT (role-coherent — each lane has ONE color identity):
+//
+//   Lane 1 (LUMINA, y=120)  Ingestion + orchestration
+//   ────────────────────────────────────────────────────
+//   [Client] [APIM] [Producer Fn] [Service Bus] ──┐
+//                                                 │
+//                                                 ├─→ Consumer Fn (lane 2)
+//                                                 │
+//                                                 └─→ DLQ Fn (lane 3)
+//
+//   Lane 2 (SIGNAL, y=280)  Données + analytique
+//   ────────────────────────────────────────────────────
+//                            [Consumer Fn] → [gold-orders] → [ADF] → [Fabric]
+//
+//   Lane 3 (EMBER, y=440)  Résilience + DLQ
+//   ────────────────────────────────────────────────────
+//                            [DLQ Fn] → [failed-orders] → [Event Grid] → [Logic App]
+//
+//   Lane 4 (MUTED, y=600)  Transverse (identité + observabilité)
+//   ────────────────────────────────────────────────────
+//   [Key Vault]            [App Insights]
+//
+// ViewBox: 1620 × 680 — accommodates 8 columns and 4 lanes with labels above each.
 
 interface NodePosition {
   id: string;
@@ -117,30 +148,46 @@ interface NodePosition {
   tone: "lumina" | "signal" | "ember" | "muted";
 }
 
+const LANE_Y = {
+  L1: 120, // Ingestion
+  L2: 280, // Data + Analytics
+  L3: 440, // Resilience
+  L4: 600, // Transverse
+};
+
+const COL_X = {
+  A: 130,
+  B: 330,
+  C: 530,
+  D: 730,
+  E: 930,
+  F: 1130,
+  G: 1330,
+  H: 1530,
+};
+
 const nodes: NodePosition[] = [
-  // Top swimlane - Happy path (y=120)
-  { id: "client", x: 90, y: 120, label: "Client", sub: "E-commerce", tone: "muted" },
-  { id: "apim", x: 240, y: 120, label: "APIM", sub: "apim-lumina-dev", tone: "lumina" },
-  { id: "fn-producer", x: 400, y: 120, label: "Producer Fn", sub: "EcommerceOrderFn", tone: "lumina" },
-  { id: "servicebus", x: 580, y: 120, label: "Service Bus", sub: "sbt-lumina-orders", tone: "lumina" },
-  { id: "fn-consumer", x: 760, y: 120, label: "Consumer Fn", sub: "OrderProcessor", tone: "signal" },
-  { id: "adls", x: 940, y: 120, label: "Data Lake", sub: "gold-orders", tone: "signal" },
+  // Lane 1 — Ingestion + orchestration (LUMINA)
+  { id: "client", x: COL_X.A, y: LANE_Y.L1, label: "Client", sub: "E-commerce", tone: "muted" },
+  { id: "apim", x: COL_X.B, y: LANE_Y.L1, label: "APIM", sub: "apim-lumina-dev", tone: "lumina" },
+  { id: "fn-producer", x: COL_X.C, y: LANE_Y.L1, label: "Producer Fn", sub: "EcommerceOrderFn", tone: "lumina" },
+  { id: "servicebus", x: COL_X.D, y: LANE_Y.L1, label: "Service Bus", sub: "sbt-lumina-orders", tone: "lumina" },
 
-  // Middle swimlane - DLQ branch (y=300)
-  { id: "dlq", x: 580, y: 300, label: "DLQ", sub: "$DeadLetterQueue", tone: "ember", },
-  { id: "fn-dlq", x: 760, y: 300, label: "DLQ Fn", sub: "FailedOrderFn", tone: "ember" },
-  { id: "adls-failed", x: 940, y: 300, label: "failed-orders", sub: "container", tone: "ember" },
-  { id: "eventgrid", x: 1100, y: 300, label: "Event Grid", sub: "BlobCreated", tone: "ember" },
-  { id: "logicapp", x: 1260, y: 300, label: "Logic App", sub: "Email alerte", tone: "ember" },
+  // Lane 2 — Data + analytics (SIGNAL)
+  { id: "fn-consumer", x: COL_X.E, y: LANE_Y.L2, label: "Consumer Fn", sub: "OrderProcessor", tone: "signal" },
+  { id: "adls", x: COL_X.F, y: LANE_Y.L2, label: "Data Lake", sub: "gold-orders", tone: "signal" },
+  { id: "adf", x: COL_X.G, y: LANE_Y.L2, label: "Data Factory", sub: "JSON → Parquet", tone: "signal" },
+  { id: "fabric", x: COL_X.H, y: LANE_Y.L2, label: "Fabric", sub: "Zero-Copy", tone: "signal" },
 
-  // Bottom swimlane - Analytics (y=480)
-  { id: "adls-gold-2", x: 940, y: 480, label: "gold-orders", sub: "JSON canonique", tone: "signal" },
-  { id: "adf", x: 1100, y: 480, label: "Data Factory", sub: "JSON → Parquet", tone: "signal" },
-  { id: "fabric", x: 1260, y: 480, label: "Fabric", sub: "Zero-Copy", tone: "signal" },
+  // Lane 3 — Resilience + DLQ (EMBER)
+  { id: "fn-dlq", x: COL_X.E, y: LANE_Y.L3, label: "DLQ Fn", sub: "FailedOrderFn", tone: "ember" },
+  { id: "adls-failed", x: COL_X.F, y: LANE_Y.L3, label: "failed-orders", sub: "container", tone: "ember" },
+  { id: "eventgrid", x: COL_X.G, y: LANE_Y.L3, label: "Event Grid", sub: "BlobCreated", tone: "ember" },
+  { id: "logicapp", x: COL_X.H, y: LANE_Y.L3, label: "Logic App", sub: "Email alerte", tone: "ember" },
 
-  // Cross-cutting (right side)
-  { id: "kv", x: 400, y: 620, label: "Key Vault", sub: "kv-lumina-dev", tone: "muted" },
-  { id: "appinsights", x: 760, y: 620, label: "App Insights", sub: "Télémétrie", tone: "muted" },
+  // Lane 4 — Transverse (MUTED)
+  { id: "kv", x: COL_X.C, y: LANE_Y.L4, label: "Key Vault", sub: "kv-lumina-dev", tone: "muted" },
+  { id: "appinsights", x: COL_X.E, y: LANE_Y.L4, label: "App Insights", sub: "Télémétrie", tone: "muted" },
 ];
 
 const TONE_COLORS = {
@@ -150,23 +197,40 @@ const TONE_COLORS = {
   muted: "rgba(250,247,240,0.4)",
 };
 
+// Map node visual id → resource panel id (for nodes that visually represent something else)
+const NODE_TO_RESOURCE: Record<string, string> = {
+  apim: "apim",
+  "fn-producer": "fn-producer",
+  servicebus: "servicebus",
+  "fn-consumer": "fn-consumer",
+  adls: "adls",
+  adf: "adf",
+  fabric: "fabric",
+  "fn-dlq": "fn-dlq",
+  "adls-failed": "adls", // failed-orders container is part of the same ADLS resource
+  eventgrid: "eventgrid",
+  logicapp: "logicapp",
+  kv: "kv",
+  appinsights: "appinsights",
+};
+
 function DiagramSVG({
   onSelect,
   onHover,
-  hoverId,
+  hoveredId,
   selectedId,
   animating,
 }: {
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
-  hoverId: string | null;
+  hoveredId: string | null;
   selectedId: string | null;
   animating: boolean;
 }) {
   return (
     <svg
-      viewBox="0 0 1400 720"
-      className="w-full h-auto min-w-[900px]"
+      viewBox="0 0 1620 680"
+      className="w-full h-auto min-w-[1100px]"
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
@@ -174,112 +238,125 @@ function DiagramSVG({
           <circle cx="0.75" cy="0.75" r="0.75" fill="rgba(250,247,240,0.07)" />
         </pattern>
         <marker id="arrow-lumina" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L9,3 z" fill="#D9F84A" opacity="0.6" />
+          <path d="M0,0 L0,6 L9,3 z" fill="#D9F84A" opacity="0.7" />
         </marker>
         <marker id="arrow-signal" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L9,3 z" fill="#7BD8B5" opacity="0.6" />
+          <path d="M0,0 L0,6 L9,3 z" fill="#7BD8B5" opacity="0.7" />
         </marker>
         <marker id="arrow-ember" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L9,3 z" fill="#F47435" opacity="0.6" />
+          <path d="M0,0 L0,6 L9,3 z" fill="#F47435" opacity="0.7" />
         </marker>
       </defs>
 
       {/* Background grid */}
-      <rect width="1400" height="720" fill="url(#dotgrid-arch)" />
+      <rect width="1620" height="680" fill="url(#dotgrid-arch)" />
 
       {/* Swimlane labels */}
-      <SwimlaneLabel y={50} text="① TRANSACTIONNEL · HAPPY PATH" color="#D9F84A" />
-      <SwimlaneLabel y={232} text="② RÉSILIENCE · DEAD-LETTER QUEUE" color="#F47435" />
-      <SwimlaneLabel y={412} text="③ ANALYTIQUE · ZERO-COPY VERS FABRIC" color="#7BD8B5" />
-      <SwimlaneLabel y={580} text="④ TRANSVERSE · IDENTITÉ & OBSERVABILITÉ" color="rgba(250,247,240,0.4)" />
+      <SwimlaneLabel y={50} text="① INGESTION · ORCHESTRATION" color="#D9F84A" />
+      <SwimlaneLabel y={210} text="② DONNÉES · DU GOLD AU LAKEHOUSE FABRIC" color="#7BD8B5" />
+      <SwimlaneLabel y={370} text="③ RÉSILIENCE · DEAD-LETTER QUEUE" color="#F47435" />
+      <SwimlaneLabel y={530} text="④ TRANSVERSE · IDENTITÉ &amp; OBSERVABILITÉ" color="rgba(250,247,240,0.45)" />
 
-      {/* Swimlane separators (subtle) */}
-      <line x1="40" y1="186" x2="1360" y2="186" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
-      <line x1="40" y1="366" x2="1360" y2="366" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
-      <line x1="40" y1="546" x2="1360" y2="546" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      {/* Subtle swimlane separators (between lanes) */}
+      <line x1="60" y1="200" x2="1580" y2="200" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      <line x1="60" y1="360" x2="1580" y2="360" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      <line x1="60" y1="520" x2="1580" y2="520" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
 
-      {/* CONNECTION LINES */}
-      {/* Happy path links */}
-      <FlowLine from={[136, 120]} to={[195, 120]} color="lumina" arrow />
-      <FlowLine from={[286, 120]} to={[354, 120]} color="lumina" arrow />
-      <FlowLine from={[446, 120]} to={[534, 120]} color="lumina" arrow />
-      <FlowLine from={[626, 120]} to={[714, 120]} color="lumina" arrow />
-      <FlowLine from={[806, 120]} to={[894, 120]} color="signal" arrow />
+      {/* ============ CONNECTION LINES ============ */}
 
-      {/* DLQ branch from Service Bus down */}
+      {/* --- Lane 1 internal: Client → APIM → Producer Fn → Service Bus --- */}
+      <FlowLine from={[176, 120]} to={[284, 120]} color="lumina" arrow />
+      <FlowLine from={[376, 120]} to={[484, 120]} color="lumina" arrow />
+      <FlowLine from={[576, 120]} to={[684, 120]} color="lumina" arrow />
+
+      {/* --- Service Bus → Consumer Fn (down to lane 2, going right) --- */}
+      {/* Two-segment path: right then down-right */}
       <path
-        d="M 580 146 L 580 220 Q 580 240 580 274"
-        fill="none"
-        stroke="#F47435"
-        strokeWidth="1"
-        strokeDasharray="3 3"
-        opacity="0.55"
-        markerEnd="url(#arrow-ember)"
-      />
-      <text x={595} y={195} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.7">
-        × 3 retries
-      </text>
-      <FlowLine from={[626, 300]} to={[714, 300]} color="ember" arrow />
-      <FlowLine from={[806, 300]} to={[894, 300]} color="ember" arrow />
-      <FlowLine from={[986, 300]} to={[1054, 300]} color="ember" arrow dashed />
-      <FlowLine from={[1146, 300]} to={[1214, 300]} color="ember" arrow />
-
-      {/* Analytics branch from ADLS gold down */}
-      <path
-        d="M 940 146 L 940 400 Q 940 420 940 454"
+        d="M 776 120 Q 853 120 853 175 L 853 254"
         fill="none"
         stroke="#7BD8B5"
-        strokeWidth="1"
-        strokeDasharray="3 3"
-        opacity="0.55"
+        strokeWidth="1.25"
+        opacity="0.7"
         markerEnd="url(#arrow-signal)"
       />
-      <text x={950} y={420} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#7BD8B5" opacity="0.7">
-        scheduled
+      <text x={865} y={150} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#7BD8B5" opacity="0.85">
+        sbs-process-order
       </text>
-      <FlowLine from={[986, 480]} to={[1054, 480]} color="signal" arrow />
-      <FlowLine from={[1146, 480]} to={[1214, 480]} color="signal" arrow dashed />
 
-      {/* Cross-cutting - dotted lines from Functions to Key Vault and App Insights */}
-      <path d="M 400 146 Q 400 380 400 594" fill="none" stroke="rgba(250,247,240,0.2)" strokeWidth="0.75" strokeDasharray="2 4" />
-      <path d="M 760 146 Q 760 380 760 594" fill="none" stroke="rgba(250,247,240,0.2)" strokeWidth="0.75" strokeDasharray="2 4" />
-      <path d="M 760 326 Q 760 460 760 594" fill="none" stroke="rgba(250,247,240,0.2)" strokeWidth="0.75" strokeDasharray="2 4" />
+      {/* --- Service Bus → DLQ Fn (down to lane 3, going right with bigger drop) --- */}
+      <path
+        d="M 776 138 Q 824 138 853 220 L 853 414"
+        fill="none"
+        stroke="#F47435"
+        strokeWidth="1.25"
+        strokeDasharray="3 3"
+        opacity="0.7"
+        markerEnd="url(#arrow-ember)"
+      />
+      <text x={865} y={328} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
+        × 3 retries
+      </text>
+      <text x={865} y={342} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
+        $DeadLetterQueue
+      </text>
 
-      {/* Animated flow dots */}
+      {/* --- Lane 2 internal: Consumer Fn → gold-orders → ADF → Fabric --- */}
+      <FlowLine from={[976, 280]} to={[1084, 280]} color="signal" arrow />
+      <FlowLine from={[1176, 280]} to={[1284, 280]} color="signal" arrow />
+      <FlowLine from={[1376, 280]} to={[1484, 280]} color="signal" arrow dashed />
+
+      {/* --- Lane 3 internal: DLQ Fn → failed-orders → Event Grid → Logic App --- */}
+      <FlowLine from={[976, 440]} to={[1084, 440]} color="ember" arrow />
+      <FlowLine from={[1176, 440]} to={[1284, 440]} color="ember" arrow dashed />
+      <FlowLine from={[1376, 440]} to={[1484, 440]} color="ember" arrow />
+
+      {/* --- Cross-cutting: Functions → Key Vault & App Insights (very faint dashed) --- */}
+      {/* Producer Fn → Key Vault (same column C, vertical) */}
+      <line x1={530} y1={146} x2={530} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
+      {/* Consumer Fn → App Insights (same column E, vertical) */}
+      <line x1={930} y1={306} x2={930} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
+      {/* DLQ Fn → App Insights (same column E, vertical) */}
+      <line x1={930} y1={466} x2={930} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
+
+      {/* ============ ANIMATED FLOW DOTS ============ */}
       {animating && (
         <>
-          <circle r="3.5" fill="#D9F84A">
-            <animateMotion dur="5s" repeatCount="indefinite" path="M 90,120 L 940,120" />
-            <animate attributeName="opacity" values="0;1;1;0" dur="5s" repeatCount="indefinite" />
-          </circle>
-          <circle r="3" fill="#F47435">
-            <animateMotion
-              dur="7s"
-              repeatCount="indefinite"
-              begin="2s"
-              path="M 580,120 L 580,300 L 1260,300"
-            />
-            <animate attributeName="opacity" values="0;1;1;0" dur="7s" begin="2s" repeatCount="indefinite" />
-          </circle>
-          <circle r="3" fill="#7BD8B5">
+          {/* Happy path: Client → APIM → Producer → Service Bus → Consumer Fn → ADLS → ADF → Fabric */}
+          <circle r="4" fill="#D9F84A">
             <animateMotion
               dur="6s"
               repeatCount="indefinite"
-              begin="1.5s"
-              path="M 940,120 L 940,480 L 1260,480"
+              path="M 130,120 L 730,120 Q 853,120 853,280 L 1530,280"
             />
-            <animate attributeName="opacity" values="0;1;1;0" dur="6s" begin="1.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Resilience path: Service Bus → DLQ Fn → failed-orders → Event Grid → Logic App */}
+          <circle r="3.5" fill="#F47435">
+            <animateMotion
+              dur="6s"
+              repeatCount="indefinite"
+              begin="2s"
+              path="M 730,138 Q 853,138 853,440 L 1530,440"
+            />
+            <animate
+              attributeName="opacity"
+              values="0;1;1;0"
+              dur="6s"
+              begin="2s"
+              repeatCount="indefinite"
+            />
           </circle>
         </>
       )}
 
-      {/* RENDER NODES */}
+      {/* ============ NODES ============ */}
       {nodes.map((n) => (
         <DiagramNode
           key={n.id}
           node={n}
-          isHover={hoverId === n.id}
-          isSelected={selectedId === n.id}
+          isHover={hoveredId === n.id}
+          isSelected={selectedId === NODE_TO_RESOURCE[n.id]}
           onSelect={onSelect}
           onHover={onHover}
         />
@@ -291,7 +368,7 @@ function DiagramSVG({
 function SwimlaneLabel({ y, text, color }: { y: number; text: string; color: string }) {
   return (
     <text
-      x={40}
+      x={60}
       y={y}
       fontSize="9"
       fontFamily="JetBrains Mono, monospace"
@@ -327,7 +404,7 @@ function FlowLine({
       stroke={c}
       strokeWidth="1"
       strokeDasharray={dashed ? "3 3" : undefined}
-      opacity="0.55"
+      opacity="0.6"
       markerEnd={arrow ? `url(#arrow-${color})` : undefined}
     />
   );
@@ -348,19 +425,13 @@ function DiagramNode({
 }) {
   const c = TONE_COLORS[node.tone];
   const isMuted = node.tone === "muted";
-  const isInteractive = ["apim", "fn-producer", "servicebus", "fn-consumer", "adls", "fn-dlq", "eventgrid", "logicapp", "adf", "fabric", "kv", "appinsights"].includes(node.id);
-
-  // Map duplicate gold-orders display to the real "adls" id
-  const targetId =
-    node.id === "adls-failed" ? "fn-dlq" :
-    node.id === "adls-gold-2" ? "adls" :
-    node.id === "dlq" ? "servicebus" :
-    node.id;
+  const resourceId = NODE_TO_RESOURCE[node.id];
+  const isInteractive = !!resourceId;
 
   return (
     <g
       transform={`translate(${node.x}, ${node.y})`}
-      onClick={() => isInteractive && onSelect(targetId)}
+      onClick={() => isInteractive && onSelect(resourceId)}
       onMouseEnter={() => onHover(node.id)}
       onMouseLeave={() => onHover(null)}
       className={isInteractive ? "cursor-pointer" : ""}
@@ -377,7 +448,7 @@ function DiagramNode({
           stroke={c}
           strokeWidth="1.5"
           strokeDasharray="2 2"
-          opacity="0.6"
+          opacity="0.7"
         />
       )}
 
@@ -387,9 +458,9 @@ function DiagramNode({
         y={-26}
         width={92}
         height={52}
-        fill="rgba(10,9,8,0.92)"
+        fill="rgba(10,9,8,0.95)"
         stroke={c}
-        strokeWidth={isHover || isSelected ? "1.5" : "0.75"}
+        strokeWidth={isHover || isSelected ? "1.5" : "0.85"}
       />
 
       {/* Status dot */}
@@ -408,7 +479,7 @@ function DiagramNode({
       </text>
 
       {/* Hover accent */}
-      {isHover && (
+      {isHover && !isMuted && (
         <line x1={-46} y1={28} x2={46} y2={28} stroke={c} strokeWidth="1.5" />
       )}
     </g>

@@ -9,9 +9,8 @@ const links = [
   { href: "/", label: "Aperçu", num: "01" },
   { href: "/architecture", label: "Architecture", num: "02" },
   { href: "/demo", label: "Démo live", num: "03" },
-  { href: "/comparison", label: "BizTalk vs Azure", num: "04" },
-  { href: "/cost", label: "Coût", num: "05" },
-  { href: "/code", label: "Code", num: "06" },
+  { href: "/cost", label: "Coût", num: "04" },
+  { href: "/code", label: "Code", num: "05" },
 ];
 
 export default function Nav() {

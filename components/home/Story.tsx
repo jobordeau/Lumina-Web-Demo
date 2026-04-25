@@ -2,76 +2,100 @@
 
 import { motion } from "framer-motion";
 
+const steps = [
+  {
+    num: "01",
+    label: "Ingress",
+    title: "APIM reçoit la requête",
+    text: "L'API Management applique le rate-limiting (60 req/min), valide la subscription key, ajoute un header X-Source-System, puis route la requête vers la Function HTTP.",
+    code: "POST /orders → apim-lumina-dev-jobordeau",
+    tone: "lumina" as const,
+  },
+  {
+    num: "02",
+    label: "Canonicalisation",
+    title: "Mapping vers le modèle canonique",
+    text: "La Function producteur désérialise le JSON e-commerce hétérogène, le mappe vers le modèle Order canonique (.NET 8), puis applique la validation FluentValidation côté entrée.",
+    code: "EcommerceOrderFunction.Run() → Order { OrderId, ... }",
+    tone: "lumina" as const,
+  },
+  {
+    num: "03",
+    label: "Pub/Sub",
+    title: "Publication sur le Topic Service Bus",
+    text: "Le message canonique est publié dans le topic. Le découplage commence ici : le producteur ne connaît plus ses consommateurs. Une nouvelle subscription = un nouveau canal sans modifier le code amont.",
+    code: "Topic: sbt-lumina-orders · Subscription: sbs-process-order",
+    tone: "lumina" as const,
+  },
+  {
+    num: "04",
+    label: "Consommation",
+    title: "Persistence dans le Data Lake",
+    text: "La Function consommateur lit la subscription, applique les règles métier (OrderProcessingService), puis écrit le JSON canonique dans le container gold-orders de l'ADLS Gen2 — en mode passwordless.",
+    code: "OrderProcessorFunction → adls/gold-orders/{OrderId}.json",
+    tone: "signal" as const,
+  },
+  {
+    num: "05",
+    label: "Analytique",
+    title: "JSON → Parquet → Microsoft Fabric",
+    text: "Data Factory convertit gold-orders en Parquet (compression Snappy) toutes les 15 minutes. Microsoft Fabric pointe sur l'ADLS via un Shortcut — Zero-Copy, pas de duplication des données.",
+    code: "ADF pipeline → analytics-orders/*.parquet → Fabric Shortcut",
+    tone: "signal" as const,
+  },
+  {
+    num: "06",
+    label: "Résilience",
+    title: "Retry · DLQ · Alerte",
+    text: "À tout moment un message peut échouer. Service Bus rejoue 3 fois (MaxDeliveryCount), puis bascule en Dead-Letter Queue. Une Function dédiée capture le message mort, le persiste dans failed-orders, et déclenche une Logic App via Event Grid.",
+    code: "× 3 retries → DLQ → FailedOrderFn → failed-orders/ → Event Grid → Logic App",
+    tone: "ember" as const,
+  },
+];
+
 export default function Story() {
   return (
     <section className="py-section border-t border-hairline relative">
       <div className="container-custom">
         <div className="grid md:grid-cols-12 gap-12">
-          {/* Left side - narrative */}
+          {/* Left side - sticky narrative */}
           <div className="md:col-span-5 md:sticky md:top-32 md:self-start">
-            <p className="eyebrow eyebrow-dot mb-6">Le récit</p>
+            <p className="eyebrow eyebrow-dot mb-6">L'anatomie d'un message</p>
             <h2 className="display-tight text-display-md mb-8 text-balance">
-              Deux époques.
+              Une commande,
               <br />
-              <span className="display-italic text-lumina">Un même flux métier.</span>
+              <span className="display-italic text-lumina">six étapes</span>,
+              <br />
+              douze ressources.
             </h2>
             <div className="space-y-4 text-ink-700 leading-relaxed">
               <p>
-                Une commande e-commerce arrive. Hier elle traversait un{" "}
-                <span className="text-ink-900">Send Port BizTalk</span>,
-                une <span className="text-ink-900">Pipeline XML</span> et une{" "}
-                <span className="text-ink-900">Orchestration</span> hébergée sur un
-                serveur on-premise.
+                Une commande e-commerce arrive sur l'endpoint HTTP. Quelques secondes plus
+                tard, elle est canonisée, persistée, indexée pour l'analytique, et
+                {" "}
+                <span className="text-ink-900">observable</span> de bout-en-bout dans
+                App Insights.
               </p>
               <p>
-                Aujourd'hui elle traverse une <span className="text-lumina">Function
-                Azure stateless</span>, un Topic Service Bus pub/sub, et un Data
-                Lake hiérarchique — le tout sans serveur à patcher, sans licence
-                Enterprise, sans mot de passe.
+                Voici ce qui se passe entre le moment où le client clique{" "}
+                <span className="font-mono text-xs text-lumina">POST /orders</span>{" "}
+                et celui où l'équipe Data écrit son premier{" "}
+                <span className="font-mono text-xs text-lumina">SELECT *</span>{" "}
+                sur le Lakehouse.
               </p>
               <p className="display-italic text-xl text-ink-900 pt-4 border-t border-hairline">
-                Le métier n'a pas changé. L'infrastructure, si.
+                Chaque étape est typée. Chaque hop est tracé. Chaque échec est rejouable.
               </p>
             </div>
           </div>
 
-          {/* Right side - comparison */}
+          {/* Right side - timeline of 6 steps */}
           <div className="md:col-span-7">
-            <div className="grid grid-cols-1 gap-px bg-hairline">
-              {/* Legacy row */}
-              <Comparison
-                badge="Hier"
-                badgeStyle="legacy"
-                title="BizTalk Server 2010"
-                items={[
-                  { l: "Hébergement", v: "Windows Server on-premise" },
-                  { l: "Licence", v: "Enterprise — ~6k€ / cœur" },
-                  { l: "Scalabilité", v: "Vertical · provisioning manuel" },
-                  { l: "Mapping", v: "BizTalk Mapper (XSLT visuel)" },
-                  { l: "Orchestration", v: "Orchestration Designer (XOML)" },
-                  { l: "Identité", v: "Service account + mot de passe en config" },
-                  { l: "Observabilité", v: "BAM + Event Viewer" },
-                  { l: "Déploiement", v: "MSI manuel · BTDF" },
-                ]}
-              />
-
-              {/* Modern row */}
-              <Comparison
-                badge="Aujourd'hui"
-                badgeStyle="modern"
-                title="Azure Cloud-Native"
-                items={[
-                  { l: "Hébergement", v: "Azure Functions Linux Consumption" },
-                  { l: "Licence", v: "Pay-per-execution · 0 €/mois au repos" },
-                  { l: "Scalabilité", v: "Auto-scale horizontal sur événements" },
-                  { l: "Mapping", v: "C# typé + FluentValidation" },
-                  { l: "Orchestration", v: "Logic Apps + Event Grid (low-code)" },
-                  { l: "Identité", v: "Managed Identity + RBAC (zero password)" },
-                  { l: "Observabilité", v: "App Insights + KQL distribué" },
-                  { l: "Déploiement", v: "GitHub Actions + Terraform" },
-                ]}
-              />
-            </div>
+            <ol className="grid grid-cols-1 gap-px bg-hairline">
+              {steps.map((s, i) => (
+                <Step key={s.num} step={s} index={i} />
+              ))}
+            </ol>
           </div>
         </div>
       </div>
@@ -79,57 +103,59 @@ export default function Story() {
   );
 }
 
-function Comparison({
-  badge,
-  badgeStyle,
-  title,
-  items,
+function Step({
+  step,
+  index,
 }: {
-  badge: string;
-  badgeStyle: "legacy" | "modern";
-  title: string;
-  items: { l: string; v: string }[];
+  step: typeof steps[number];
+  index: number;
 }) {
-  const isLegacy = badgeStyle === "legacy";
+  const colorClass = {
+    lumina: "text-lumina",
+    signal: "text-signal",
+    ember: "text-ember",
+  }[step.tone];
+
+  const borderColorClass = {
+    lumina: "border-lumina/40 group-hover:border-lumina",
+    signal: "border-signal/40 group-hover:border-signal",
+    ember: "border-ember/40 group-hover:border-ember",
+  }[step.tone];
+
   return (
-    <motion.div
+    <motion.li
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6 }}
-      className={`relative bg-ink-0 p-8 md:p-10 ${isLegacy ? "stripes-warn" : ""}`}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ delay: index * 0.06, duration: 0.5 }}
+      className="bg-ink-0 group hover:bg-ink-50 transition-colors p-6 md:p-8 relative"
     >
-      <div className="flex items-center justify-between mb-6">
-        <span
-          className={`font-mono text-[0.65rem] tracking-widest uppercase px-2.5 py-1 ${
-            isLegacy
-              ? "bg-ember/10 text-ember"
-              : "bg-lumina/10 text-lumina"
-          }`}
-        >
-          {badge}
-        </span>
-        <h3
-          className={`display-tight text-2xl ${
-            isLegacy ? "text-ink-700 line-through decoration-ember decoration-1" : "text-ink-900"
-          }`}
-        >
-          {title}
-        </h3>
-      </div>
-
-      <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
-        {items.map((it) => (
-          <div key={it.l} className="flex flex-col">
-            <dt className="font-mono text-[0.65rem] tracking-widest uppercase text-ink-500">
-              {it.l}
-            </dt>
-            <dd className={`text-sm mt-0.5 ${isLegacy ? "text-ink-600" : "text-ink-900"}`}>
-              {it.v}
-            </dd>
+      <div className="flex items-start gap-6">
+        {/* Step number */}
+        <div className="shrink-0">
+          <div className={`w-12 h-12 border ${borderColorClass} flex items-center justify-center transition-colors`}>
+            <span className={`font-mono text-sm font-medium ${colorClass}`}>
+              {step.num}
+            </span>
           </div>
-        ))}
-      </dl>
-    </motion.div>
+        </div>
+
+        {/* Step content */}
+        <div className="flex-1 min-w-0">
+          <p className={`font-mono text-[0.65rem] tracking-widest uppercase ${colorClass} mb-1.5`}>
+            {step.label}
+          </p>
+          <h3 className="display-tight text-xl md:text-2xl text-ink-900 mb-3">
+            {step.title}
+          </h3>
+          <p className="text-ink-700 text-sm leading-relaxed mb-4">
+            {step.text}
+          </p>
+          <pre className={`font-mono text-[0.7rem] ${colorClass} bg-ink-50 group-hover:bg-ink-0 transition-colors border-l-2 ${borderColorClass.split(" ")[0]} px-3 py-2 whitespace-pre-wrap break-words opacity-80`}>
+            {step.code}
+          </pre>
+        </div>
+      </div>
+    </motion.li>
   );
 }

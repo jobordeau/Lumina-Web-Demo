@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="container-custom py-16 grid md:grid-cols-12 gap-8">
         <div className="md:col-span-5">
           <p className="font-display italic text-3xl text-ink-900 leading-tight text-balance">
-            Du monolithe BizTalk au cloud-native Azure.
+            Une architecture d'intégration cloud-native, de bout-en-bout.
           </p>
           <p className="mt-4 text-ink-500 text-sm max-w-md">
             Une preuve de concept conçue, codée et déployée en{" "}
@@ -21,7 +21,7 @@ export default function Footer() {
             <li><Link href="/" className="text-ink-700 hover:text-lumina transition-colors">Aperçu</Link></li>
             <li><Link href="/architecture" className="text-ink-700 hover:text-lumina transition-colors">Architecture</Link></li>
             <li><Link href="/demo" className="text-ink-700 hover:text-lumina transition-colors">Démo live</Link></li>
-            <li><Link href="/comparison" className="text-ink-700 hover:text-lumina transition-colors">BizTalk vs Azure</Link></li>
+            <li><Link href="/cost" className="text-ink-700 hover:text-lumina transition-colors">Coût</Link></li>
           </ul>
         </div>
 
