@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #0A0908;
+    --bg-elevated: #13110F;
+    --hairline: rgba(250, 247, 240, 0.08);
+    --hairline-strong: rgba(250, 247, 240, 0.16);
+  }
+
+  * {
+    border-color: var(--hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: theme("colors.ink.900");
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: theme("colors.lumina.DEFAULT");
+    color: theme("colors.ink.0");
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.ink.200");
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme("colors.ink.300");
+  }
+}
+
+@layer components {
+  /* Editorial italic display headlines */
+  .display-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-optical-sizing: auto;
+    font-variation-settings: "opsz" 144, "SOFT" 30;
+  }
+
+  .display-tight {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-optical-sizing: auto;
+    font-variation-settings: "opsz" 144, "SOFT" 0;
+  }
+
+  /* Eyebrow technical label */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: theme("colors.ink.500");
+  }
+
+  .eyebrow-dot::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background-color: theme("colors.lumina.DEFAULT");
+    border-radius: 50%;
+    margin-right: 0.6em;
+    transform: translateY(-2px);
+  }
+
+  /* Hairline borders */
+  .border-hairline {
+    border-color: var(--hairline);
+  }
+  .border-hairline-strong {
+    border-color: var(--hairline-strong);
+  }
+
+  /* Grain overlay - subtle texture for sophisticated depth */
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* Hairline rule */
+  .rule {
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  /* Bracket label - editorial detail */
+  .bracket-num::before {
+    content: "[";
+    margin-right: 0.3em;
+    color: theme("colors.lumina.DEFAULT");
+  }
+  .bracket-num::after {
+    content: "]";
+    margin-left: 0.3em;
+    color: theme("colors.lumina.DEFAULT");
+  }
+
+  /* Glow effect for accent elements */
+  .glow-lumina {
+    box-shadow: 0 0 60px -10px rgba(217, 248, 74, 0.4);
+  }
+
+  /* Animated gradient text */
+  .text-gradient-lumina {
+    background: linear-gradient(
+      120deg,
+      theme("colors.ink.900") 0%,
+      theme("colors.ink.900") 40%,
+      theme("colors.lumina.DEFAULT") 50%,
+      theme("colors.ink.900") 60%,
+      theme("colors.ink.900") 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* Diagonal stripe pattern for "warning/legacy" zones */
+  .stripes-warn {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0,
+      transparent 8px,
+      rgba(244, 116, 53, 0.08) 8px,
+      rgba(244, 116, 53, 0.08) 9px
+    );
+  }
+}
+
+@layer utilities {
+  .container-custom {
+    width: 100%;
+    max-width: 88rem;
+    margin: 0 auto;
+    padding-left: clamp(1.25rem, 4vw, 3rem);
+    padding-right: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  /* Ascii-arrow pointer for editorial details */
+  .arrow-right::before {
+    content: "→";
+    margin-right: 0.4em;
+    color: theme("colors.lumina.DEFAULT");
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
