@@ -117,7 +117,7 @@ export default function Hero() {
             <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
           </Link>
           <span className="font-mono text-xs text-ink-500 md:ml-4">
-            <span className="text-lumina">↓</span> 12 ressources Azure · 4 Functions · 0 secret en clair
+            <span className="text-lumina">↓</span> 14 composants Azure · 6 Functions · 0 secret en clair
           </span>
         </motion.div>
       </div>

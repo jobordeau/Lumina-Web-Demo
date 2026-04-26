@@ -21,6 +21,7 @@ export default function Footer() {
             <li><Link href="/" className="text-ink-700 hover:text-lumina transition-colors">Aperçu</Link></li>
             <li><Link href="/architecture" className="text-ink-700 hover:text-lumina transition-colors">Architecture</Link></li>
             <li><Link href="/demo" className="text-ink-700 hover:text-lumina transition-colors">Démo</Link></li>
+            <li><Link href="/analytics" className="text-ink-700 hover:text-lumina transition-colors">Analytics</Link></li>
           </ul>
         </div>
 

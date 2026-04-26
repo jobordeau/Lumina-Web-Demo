@@ -29,7 +29,7 @@ export default function ClosingCTA() {
             <span className="display-italic text-lumina">Lancez le flux.</span>
           </h2>
           <p className="text-ink-700 mt-8 text-lg max-w-2xl mx-auto">
-            Soumettez une commande, regardez-la traverser les 12 ressources Azure
+            Soumettez une commande, regardez-la traverser les 14 composants Azure
             en temps réel. Injectez une erreur. Observez la résilience prendre le relais.
           </p>
 

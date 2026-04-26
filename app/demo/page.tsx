@@ -119,6 +119,14 @@ export default function DemoPage() {
             <p className="font-mono text-xs text-ink-500 mt-4">
               endpoint · <span className="text-ink-700">{APIM_BASE_URL}{ORDERS_PATH}</span>
             </p>
+            <p className="text-xs text-ink-500 mt-3 leading-relaxed border-l border-hairline-strong pl-3">
+              <span className="font-mono text-ink-700">↳ Bon à savoir</span> · les commandes
+              envoyées en mode <span className="text-lumina">preset</span> sont préfixées{" "}
+              <span className="font-mono text-ink-700">DEMO-*</span> et exclues par défaut
+              du dashboard <a href="/analytics" className="text-signal hover:underline">Analytics</a>{" "}
+              (toutes identiques, elles fausseraient les KPIs). Les commandes en mode{" "}
+              <span className="text-lumina">custom</span> apparaissent comme de vraies commandes.
+            </p>
           </motion.div>
         </div>
       </section>

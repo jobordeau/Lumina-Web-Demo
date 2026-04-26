@@ -25,7 +25,7 @@ export default function ArchitecturePage() {
             className="display-tight text-display-lg text-balance max-w-5xl"
           >
             Trois flux,{" "}
-            <span className="display-italic text-lumina">douze composants</span>,
+            <span className="display-italic text-lumina">quatorze composants</span>,
             une seule source de vérité.
           </motion.h1>
 
@@ -77,14 +77,16 @@ export default function ArchitecturePage() {
             </div>
             <div className="md:col-span-9">
               <h2 className="display-tight text-display-md text-balance">
-                Les douze composants,{" "}
+                Les quatorze composants,{" "}
                 <span className="display-italic text-lumina">leur rôle exact</span>.
               </h2>
               <p className="mt-4 text-ink-700 text-sm leading-relaxed max-w-2xl">
-                Le diagramme ci-dessus visualise les onze composants impliqués dans le
-                flux. La douzième entrée (GetOrderStatusFunction) est une route HTTP
-                additionnelle exposée par la même Function App, dédiée au polling
-                de la démo — non visualisée pour préserver la lisibilité.
+                Le diagramme ci-dessus visualise les onze composants impliqués dans
+                le flux principal. Trois entrées supplémentaires — <span className="font-mono text-lumina">HealthCheckFunction</span>,
+                <span className="font-mono text-lumina"> GetOrderStatusFunction</span>,
+                <span className="font-mono text-lumina"> GetAnalyticsSummaryFunction</span> —
+                sont des routes HTTP utilitaires exposées par la même Function App,
+                non visualisées pour préserver la lisibilité.
               </p>
             </div>
           </div>

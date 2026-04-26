@@ -15,7 +15,7 @@ export default function ArchPreview() {
           <div className="md:col-span-9">
             <h2 className="display-tight text-display-md text-balance">
               Trois flux,{" "}
-              <span className="display-italic text-lumina">douze composants</span>,
+              <span className="display-italic text-lumina">quatorze composants</span>,
               <br className="hidden md:block" /> une seule source de vérité.
             </h2>
             <p className="text-ink-700 mt-6 max-w-2xl">

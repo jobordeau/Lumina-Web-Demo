@@ -8,6 +8,7 @@ export const APIM_BASE_URL =
 
 export const ORDERS_PATH = "/ecommerce/orders";
 export const HEALTH_PATH = "/ecommerce/health";
+export const ANALYTICS_PATH = "/ecommerce/analytics/summary";
 
 export const POLL_INTERVAL_MS = 2000;
 export const POLL_MAX_ATTEMPTS = 35; // ~70s — enough for retry × 3 + DLQ chain

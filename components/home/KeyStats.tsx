@@ -5,17 +5,17 @@ import { motion } from "framer-motion";
 const stats = [
   {
     num: "01",
-    value: "12",
+    value: "14",
     suffix: "",
     label: "Composants Azure déployés",
     note: "via Terraform · Infrastructure as Code",
   },
   {
     num: "02",
-    value: "4",
+    value: "6",
     suffix: "",
     label: "Azure Functions .NET 8",
-    note: "Producer · Consumer · DLQ · Status API",
+    note: "Producer · Consumer · DLQ · Status · Analytics · Health",
   },
   {
     num: "03",

@@ -66,7 +66,7 @@ export default function Story() {
               <br />
               <span className="display-italic text-lumina">six étapes</span>,
               <br />
-              douze composants.
+              quatorze composants.
             </h2>
             <div className="space-y-4 text-ink-700 leading-relaxed">
               <p>
