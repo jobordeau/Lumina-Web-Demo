@@ -1,4 +1,5 @@
 import type {
+  AlertDetails,
   DemoPhase,
   DemoState,
   LogEntry,
@@ -50,6 +51,7 @@ export const initialState: DemoState = {
   logs: [],
   inputPayload: null,
   persistedBody: null,
+  alertDetails: null,
   activePayloadTab: "request",
 };
 
@@ -62,7 +64,7 @@ export type Action =
   | { type: "POST_VALIDATION_FAILED"; request: RequestRecord }
   | { type: "POST_NETWORK_ERROR"; request: RequestRecord }
   | { type: "POLL_START" }
-  | { type: "POLL_RESULT"; request: RequestRecord; status: "pending" | "completed" | "dead-lettered"; persistedBody?: unknown }
+  | { type: "POLL_RESULT"; request: RequestRecord; status: "pending" | "completed" | "dead-lettered"; persistedBody?: unknown; alertDetails?: AlertDetails }
   | { type: "POLL_NETWORK_ERROR"; request: RequestRecord }
   | { type: "POLL_TIMEOUT" }
   | { type: "TICK"; elapsedMs: number }
@@ -300,16 +302,18 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
         );
       } else if (action.status === "dead-lettered") {
         newPhase = "completed-dlq";
+        const alertConfirmed = action.alertDetails != null;
+
         newNodeStatuses = {
           ...newNodeStatuses,
           servicebus: "error",
           "fn-consumer": "error",
           "fn-dlq": "success",
           "adls-failed": "success",
-          // Event Grid + Logic App firing is observable in the Azure Portal
-          // but not from this status endpoint — mark as inferred
-          eventgrid: "inferred",
-          logicapp: "inferred",
+          // Event Grid + Logic App: 'success' when alert blob proves email was sent,
+          // 'inferred' until then (transient state during polling)
+          eventgrid: alertConfirmed ? "success" : "inferred",
+          logicapp: alertConfirmed ? "success" : "inferred",
         };
         newLogs.push(
           nextLog(
@@ -323,14 +327,43 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
             "FailedOrderFn",
             "DLQ message capturé · persisté dans failed-orders/",
             state.elapsedMs
-          ),
+          )
+        );
+        if (alertConfirmed && action.alertDetails) {
+          newLogs.push(
+            nextLog(
+              "INF",
+              "EventGrid",
+              "BlobCreated event délivré à la Logic App",
+              state.elapsedMs
+            ),
+            nextLog(
+              "INF",
+              "LogicApp",
+              `Email envoyé · destinataire=${action.alertDetails.recipient} · runId=${action.alertDetails.logicAppRunId ?? "n/a"}`,
+              state.elapsedMs,
+              `Preuve persistée dans alerts-sent/${state.orderId}.json`
+            ),
+          );
+        }
+        newLogs.push(
           nextLog(
             "INF",
             "SYSTEM",
-            "═══ Run complete · status=dead-lettered ═══",
+            alertConfirmed
+              ? "═══ Run complete · status=dead-lettered · email envoyé ═══"
+              : "═══ Run complete · status=dead-lettered ═══",
             state.elapsedMs
           )
         );
+      }
+
+      // Determine the best tab to surface based on what just arrived
+      let nextActiveTab: PayloadTab = state.activePayloadTab;
+      if (action.status === "dead-lettered" && action.alertDetails) {
+        nextActiveTab = "alert"; // surface the email proof when it arrives
+      } else if (action.status === "completed" || action.status === "dead-lettered") {
+        nextActiveTab = "persisted";
       }
 
       return {
@@ -339,9 +372,10 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
         lastStatusRequest: action.request,
         lastStatus: action.status,
         persistedBody: action.persistedBody ?? state.persistedBody,
+        alertDetails: action.alertDetails ?? state.alertDetails,
         nodeStatuses: newNodeStatuses,
         logs: newLogs,
-        activePayloadTab: "persisted",
+        activePayloadTab: nextActiveTab,
       };
     }
 

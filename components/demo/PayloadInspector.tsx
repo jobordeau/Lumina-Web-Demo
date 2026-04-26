@@ -13,16 +13,18 @@ const TABS: { id: PayloadTab; label: string }[] = [
   { id: "request", label: "Request" },
   { id: "response", label: "Response" },
   { id: "persisted", label: "Persisted" },
+  { id: "alert", label: "Alert" },
 ];
 
 export default function PayloadInspector({ state, onTabChange }: PayloadInspectorProps) {
-  const { activePayloadTab, inputPayload, postRequest, lastStatusRequest, persistedBody, phase } = state;
+  const { activePayloadTab, inputPayload, postRequest, persistedBody, alertDetails, phase } = state;
 
   // Decide which tabs are enabled based on what we've observed
   const tabAvailability: Record<PayloadTab, boolean> = {
     request: inputPayload != null,
     response: postRequest != null,
     persisted: persistedBody != null || phase === "completed-gold" || phase === "completed-dlq",
+    alert: alertDetails != null,
   };
 
   return (
@@ -110,6 +112,10 @@ function getSubtitle(tab: PayloadTab, state: DemoState): string {
     if (state.phase === "completed-dlq") return "Lu depuis failed-orders/failed-order-{orderId}.json";
     return "Body persisté dans le Data Lake";
   }
+  if (tab === "alert") {
+    if (state.alertDetails) return `Lu depuis alerts-sent/${state.orderId ?? "{orderId}"}.json`;
+    return "Preuve d'envoi email écrite par la Logic App";
+  }
   return "";
 }
 
@@ -157,7 +163,79 @@ function renderTab(tab: PayloadTab, state: DemoState): React.ReactNode {
     return <ColoredJSON value={state.persistedBody} accent={accent} />;
   }
 
+  if (tab === "alert") {
+    if (!state.alertDetails) {
+      if (state.phase === "completed-dlq") {
+        return <Hint text="En attente de la confirmation Logic App…" />;
+      }
+      return <Hint text="Aucune alerte à afficher pour ce scénario." />;
+    }
+    const a = state.alertDetails;
+    return (
+      <div className="space-y-4">
+        {/* Confirmation banner */}
+        <div className="border border-signal/40 bg-signal/5 px-3 py-2.5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-mono text-[0.65rem] tracking-widest uppercase text-signal font-medium">
+              ✓ Email envoyé · vérifié
+            </span>
+          </div>
+          <p className="text-[0.7rem] text-ink-700 leading-relaxed">
+            Logic App a écrit ce fichier <span className="text-signal">après</span>{" "}
+            l'envoi réussi de l'email d'alerte. C'est la preuve cryptographique que la chaîne
+            Event Grid → Logic App → SMTP a bien fonctionné.
+          </p>
+        </div>
+
+        {/* Key facts grid */}
+        <div className="grid grid-cols-1 gap-1.5 font-mono text-[0.7rem]">
+          <KeyValue label="Destinataire" value={a.recipient} accent="signal" />
+          <KeyValue label="Sujet" value={a.subject} />
+          <KeyValue label="Canal" value={a.channel} />
+          <KeyValue label="Envoyé à" value={a.alertSentAt} accent="lumina" />
+          {a.logicAppRunId && (
+            <KeyValue label="Logic App run" value={a.logicAppRunId} mono />
+          )}
+        </div>
+
+        <div className="border-t border-hairline pt-3">
+          <p className="font-mono text-[0.6rem] tracking-widest uppercase text-ink-500 mb-2">
+            JSON brut
+          </p>
+          <ColoredJSON value={a} accent="signal" />
+        </div>
+      </div>
+    );
+  }
+
   return null;
+}
+
+function KeyValue({
+  label,
+  value,
+  accent,
+  mono,
+}: {
+  label: string;
+  value: string;
+  accent?: "signal" | "lumina" | "ember";
+  mono?: boolean;
+}) {
+  const colorClass =
+    accent === "signal" ? "text-signal" :
+    accent === "lumina" ? "text-lumina" :
+    accent === "ember" ? "text-ember" :
+    "text-ink-900";
+
+  return (
+    <div className="flex items-baseline gap-3">
+      <span className="text-ink-500 shrink-0 min-w-[110px]">{label}</span>
+      <span className={cn("flex-1 break-all", colorClass, mono && "text-[0.65rem]")}>
+        {value}
+      </span>
+    </div>
+  );
 }
 
 function ResponseStatusLine({ status, durationMs }: { status: number; durationMs: number }) {

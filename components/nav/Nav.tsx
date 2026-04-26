@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSharedBackendHealth } from "@/components/shared/BackendHealthProvider";
 
 const links = [
   { href: "/", label: "Aperçu", num: "01" },
@@ -14,6 +15,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const { status } = useSharedBackendHealth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -47,6 +49,7 @@ export default function Nav() {
         <ul className="hidden lg:flex items-center gap-1">
           {links.map((l) => {
             const active = pathname === l.href;
+            const isDemo = l.href === "/demo";
             return (
               <li key={l.href}>
                 <Link
@@ -60,6 +63,7 @@ export default function Nav() {
                     {l.num}
                   </span>
                   <span>{l.label}</span>
+                  {isDemo && <DemoStatusDot status={status} />}
                   {active && (
                     <span className="absolute -bottom-px left-3 right-3 h-px bg-lumina" />
                   )}
@@ -70,13 +74,45 @@ export default function Nav() {
         </ul>
 
         <div className="hidden md:flex items-center gap-4">
-          <span className="font-mono text-[0.65rem] text-ink-500 tracking-widest uppercase">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-lumina mr-2 animate-pulse" />
-            Build · 2026.04
-          </span>
+          <BackendStatusBadge status={status} />
         </div>
       </nav>
     </header>
+  );
+}
+
+function DemoStatusDot({ status }: { status: "checking" | "healthy" | "unavailable" }) {
+  if (status === "checking") {
+    return <span className="w-1.5 h-1.5 rounded-full bg-ink-500 animate-pulse" title="Vérification du backend…" />;
+  }
+  if (status === "healthy") {
+    return <span className="w-1.5 h-1.5 rounded-full bg-signal" title="Backend Azure en ligne" />;
+  }
+  return <span className="w-1.5 h-1.5 rounded-full bg-ember" title="Backend Azure en pause" />;
+}
+
+function BackendStatusBadge({ status }: { status: "checking" | "healthy" | "unavailable" }) {
+  if (status === "checking") {
+    return (
+      <span className="font-mono text-[0.65rem] text-ink-500 tracking-widest uppercase flex items-center">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-ink-500 mr-2 animate-pulse" />
+        Vérification…
+      </span>
+    );
+  }
+  if (status === "healthy") {
+    return (
+      <span className="font-mono text-[0.65rem] text-signal tracking-widest uppercase flex items-center">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-signal mr-2 animate-pulse" />
+        Backend en ligne
+      </span>
+    );
+  }
+  return (
+    <span className="font-mono text-[0.65rem] text-ember tracking-widest uppercase flex items-center">
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember mr-2" />
+      Backend en pause
+    </span>
   );
 }
 

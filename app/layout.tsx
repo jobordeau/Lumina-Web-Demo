@@ -3,6 +3,7 @@ import { Fraunces, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/nav/Nav";
 import Footer from "@/components/footer/Footer";
+import { BackendHealthProvider } from "@/components/shared/BackendHealthProvider";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -41,9 +42,11 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-ink-0 text-ink-900">
         <div className="grain-overlay" aria-hidden="true" />
-        <Nav />
-        <main>{children}</main>
-        <Footer />
+        <BackendHealthProvider>
+          <Nav />
+          <main>{children}</main>
+          <Footer />
+        </BackendHealthProvider>
       </body>
     </html>
   );

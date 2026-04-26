@@ -12,11 +12,14 @@ import ConfigurationPanel from "@/components/demo/ConfigurationPanel";
 import FlowVisualization from "@/components/demo/FlowVisualization";
 import EventLog from "@/components/demo/EventLog";
 import PayloadInspector from "@/components/demo/PayloadInspector";
+import BackendStatusBanner from "@/components/demo/BackendStatusBanner";
+import { useSharedBackendHealth } from "@/components/shared/BackendHealthProvider";
 
 export default function DemoPage() {
   const [state, dispatch] = useReducer(demoReducer, initialState);
   const [customPayload, setCustomPayload] = useState<OrderPayload>(() => buildEmptyCustomPayload());
   const [runCount, setRunCount] = useState(0);
+  const { status: backendStatus } = useSharedBackendHealth();
 
   // Cancellation flag — toggled when reset is hit so the runner aborts cleanly
   const cancelledRef = useRef(false);
@@ -123,6 +126,16 @@ export default function DemoPage() {
       {/* Main grid */}
       <section className="pb-section">
         <div className="container-custom">
+          {/* Backend status banner — first thing visitors see in the action area */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="mb-6"
+          >
+            <BackendStatusBanner />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,6 +151,7 @@ export default function DemoPage() {
                 customPayload={customPayload}
                 lastOrderId={state.orderId}
                 runCount={runCount}
+                backendStatus={backendStatus}
                 onModeChange={handleModeChange}
                 onSelectPreset={handleSelectPreset}
                 onCustomPayloadChange={setCustomPayload}

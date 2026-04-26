@@ -19,6 +19,7 @@ interface ConfigurationPanelProps {
   customPayload: OrderPayload;
   lastOrderId: string | null;
   runCount: number;
+  backendStatus: "checking" | "healthy" | "unavailable";
   onModeChange: (mode: Mode) => void;
   onSelectPreset: (id: ScenarioId) => void;
   onCustomPayloadChange: (payload: OrderPayload) => void;
@@ -34,11 +35,15 @@ const isComplete = (phase: DemoPhase) =>
   phase === "validation-failed" || phase === "timeout" || phase === "error";
 
 export default function ConfigurationPanel(props: ConfigurationPanelProps) {
-  const { mode, scenarioId, phase, customPayload, lastOrderId, runCount, onModeChange, onSelectPreset, onRun, onReset, onCustomPayloadChange } = props;
+  const { mode, scenarioId, phase, customPayload, lastOrderId, runCount, backendStatus, onModeChange, onSelectPreset, onRun, onReset, onCustomPayloadChange } = props;
 
   const running = isRunning(phase);
   const complete = isComplete(phase);
-  const canRun = mode === "preset" ? scenarioId !== null : isCustomValid(customPayload);
+  const inputsValid = mode === "preset" ? scenarioId !== null : isCustomValid(customPayload);
+  // Block runs if backend is checking (don't know yet) or unavailable.
+  // Allow runs when status is "healthy" only.
+  const backendReady = backendStatus === "healthy";
+  const canRun = inputsValid && backendReady;
 
   return (
     <div className="border border-hairline-strong bg-ink-50 flex flex-col h-full overflow-hidden">
@@ -135,6 +140,15 @@ export default function ConfigurationPanel(props: ConfigurationPanelProps) {
         <button
           onClick={onRun}
           disabled={!canRun || running}
+          title={
+            backendStatus === "unavailable"
+              ? "Backend Azure en pause — la démo n'est pas exécutable actuellement."
+              : backendStatus === "checking"
+              ? "Vérification du backend en cours…"
+              : !inputsValid
+              ? "Sélectionnez un scénario ou complétez le formulaire."
+              : ""
+          }
           className={cn(
             "w-full flex items-center justify-center gap-2 px-4 py-3 transition-all",
             !canRun || running
@@ -144,7 +158,13 @@ export default function ConfigurationPanel(props: ConfigurationPanelProps) {
         >
           <Play className="w-3.5 h-3.5" fill="currentColor" />
           <span className="font-medium text-sm">
-            {running ? "Exécution en cours…" : "Envoyer la commande"}
+            {running
+              ? "Exécution en cours…"
+              : backendStatus === "unavailable"
+              ? "Backend en pause"
+              : backendStatus === "checking"
+              ? "Vérification…"
+              : "Envoyer la commande"}
           </span>
         </button>
 

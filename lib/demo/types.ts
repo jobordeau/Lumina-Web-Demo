@@ -63,9 +63,20 @@ export interface OrderPayload {
   }>;
 }
 
-export type PayloadTab = "request" | "response" | "persisted";
+export type PayloadTab = "request" | "response" | "persisted" | "alert";
 
 export type Mode = "preset" | "custom";
+
+/** Mirrors the AlertInfo shape from api.ts but lives in types.ts to avoid circular imports */
+export interface AlertDetails {
+  orderId: string;
+  alertSentAt: string;
+  channel: string;
+  recipient: string;
+  subject: string;
+  logicAppRunId?: string;
+  sourceBlob?: string;
+}
 
 export interface DemoState {
   mode: Mode;
@@ -90,6 +101,8 @@ export interface DemoState {
   inputPayload: OrderPayload | null;
   /** the canonical / persisted body if status returned a body */
   persistedBody: unknown | null;
+  /** the alert details once Logic App has confirmed sending the email */
+  alertDetails: AlertDetails | null;
   /** payload tab the user is currently viewing (independent from phase) */
   activePayloadTab: PayloadTab;
 }

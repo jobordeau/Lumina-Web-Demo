@@ -7,9 +7,14 @@ export const APIM_BASE_URL =
   "https://apim-lumina-dev-jobordeau.azure-api.net";
 
 export const ORDERS_PATH = "/ecommerce/orders";
+export const HEALTH_PATH = "/ecommerce/health";
 
 export const POLL_INTERVAL_MS = 2000;
 export const POLL_MAX_ATTEMPTS = 35; // ~70s — enough for retry × 3 + DLQ chain
+
+export const HEALTH_TIMEOUT_MS = 5000;
+// Re-check health every 5 minutes (in case the user keeps the page open)
+export const HEALTH_RECHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 // Generate a unique orderId per run, prefixed DEMO so portfolio test data
 // can be easily distinguished from curl tests in the storage account.

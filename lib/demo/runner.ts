@@ -94,19 +94,28 @@ export async function runDemoCycle(opts: RunnerOptions): Promise<void> {
     }
 
     const persistedBody = "body" in body ? (body as any).body : undefined;
+    const alert = (body as any).alert;
+    const alertDetails = alert?.sent === true ? alert.details : undefined;
 
     dispatch({
       type: "POLL_RESULT",
       request: pollResult.request,
       status: body.status,
       persistedBody,
+      alertDetails,
     });
 
-    if (body.status === "completed" || body.status === "dead-lettered") {
-      return; // terminal state
+    if (body.status === "completed") {
+      return; // happy path - no alert expected
     }
 
-    // status === 'pending' — wait and try again
+    // For dead-lettered, keep polling a bit until alert is confirmed (or budget runs out).
+    // Logic App can take a few seconds to fire after the failed-orders blob is written.
+    if (body.status === "dead-lettered" && alert?.sent === true) {
+      return; // alert confirmed, all done
+    }
+
+    // status === 'pending' OR (dead-lettered without alert yet) — wait and try again
     await sleep(POLL_INTERVAL_MS);
   }
 

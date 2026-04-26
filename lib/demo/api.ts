@@ -49,23 +49,42 @@ export async function postOrder(payload: OrderPayload): Promise<PostOrderResult>
   }
 }
 
+export type AlertInfo =
+  | {
+      sent: true;
+      location: string;
+      details: {
+        orderId: string;
+        alertSentAt: string;
+        channel: string;
+        recipient: string;
+        subject: string;
+        logicAppRunId?: string;
+        sourceBlob?: string;
+      };
+    }
+  | { sent: false };
+
 export type StatusResponse =
   | {
       orderId: string;
       status: "completed";
       location: string;
       body: unknown;
+      alert?: AlertInfo;
     }
   | {
       orderId: string;
       status: "dead-lettered";
       location: string;
       body: unknown;
+      alert?: AlertInfo;
     }
   | {
       orderId: string;
       status: "pending";
       message: string;
+      alert?: AlertInfo;
     };
 
 export interface GetStatusResult {
