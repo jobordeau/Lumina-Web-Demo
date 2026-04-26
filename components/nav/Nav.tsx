@@ -8,9 +8,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/", label: "Aperçu", num: "01" },
   { href: "/architecture", label: "Architecture", num: "02" },
-  { href: "/demo", label: "Démo live", num: "03" },
-  { href: "/cost", label: "Coût", num: "04" },
-  { href: "/code", label: "Code", num: "05" },
+  { href: "/demo", label: "Démo", num: "03" },
 ];
 
 export default function Nav() {

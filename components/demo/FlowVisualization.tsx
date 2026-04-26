@@ -16,17 +16,17 @@ interface FlowVisualizationProps {
 const NODES = [
   // Lane 1 — Ingestion (lumina)
   { id: "apim", x: 100, y: 80, label: "APIM", sub: "apim-lumina", lane: "lumina" as const },
-  { id: "fn-producer", x: 270, y: 80, label: "Producer Fn", sub: "EcommerceOrderFn", lane: "lumina" as const },
+  { id: "fn-producer", x: 270, y: 80, label: "Producer", sub: "EcommerceOrderFn", lane: "lumina" as const },
   { id: "servicebus", x: 450, y: 80, label: "Service Bus", sub: "sbt-lumina-orders", lane: "lumina" as const },
 
   // Lane 2 — Data + Analytics (signal)
-  { id: "fn-consumer", x: 620, y: 200, label: "Consumer Fn", sub: "OrderProcessor", lane: "signal" as const },
+  { id: "fn-consumer", x: 620, y: 200, label: "Consumer", sub: "OrderProcessor", lane: "signal" as const },
   { id: "adls", x: 800, y: 200, label: "Data Lake", sub: "gold-orders", lane: "signal" as const },
   { id: "adf", x: 980, y: 200, label: "Data Factory", sub: "JSON → Parquet", lane: "signal" as const },
   { id: "fabric", x: 1160, y: 200, label: "Fabric", sub: "Zero-Copy", lane: "signal" as const },
 
   // Lane 3 — Resilience (ember)
-  { id: "fn-dlq", x: 620, y: 320, label: "DLQ Fn", sub: "FailedOrderFn", lane: "ember" as const },
+  { id: "fn-dlq", x: 620, y: 320, label: "DLQ", sub: "FailedOrderFn", lane: "ember" as const },
   { id: "adls-failed", x: 800, y: 320, label: "failed-orders", sub: "container", lane: "ember" as const },
   { id: "eventgrid", x: 980, y: 320, label: "Event Grid", sub: "BlobCreated", lane: "ember" as const },
   { id: "logicapp", x: 1160, y: 320, label: "Logic App", sub: "Email alerte", lane: "ember" as const },
@@ -103,9 +103,9 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
           <ConnectionLine from={[146, 80]} to={[224, 80]} color="lumina" arrow />
           <ConnectionLine from={[316, 80]} to={[404, 80]} color="lumina" arrow />
 
-          {/* Service Bus → Consumer Fn */}
+          {/* Service Bus → Consumer (from RIGHT of SB at 496,80 to TOP of Consumer at 620,178) */}
           <path
-            d="M 496 80 Q 590 80 590 130 L 590 179"
+            d="M 496 80 C 555 80, 620 130, 620 178"
             fill="none"
             stroke="#7BD8B5"
             strokeWidth="1"
@@ -113,9 +113,9 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
             markerEnd="url(#flow-arrow-signal)"
           />
 
-          {/* Service Bus → DLQ Fn */}
+          {/* Service Bus → DLQ (from bottom of SB at 450,106 to LEFT of DLQ at 574,320) */}
           <path
-            d="M 496 95 Q 580 95 590 220 L 590 299"
+            d="M 450 106 C 450 260, 480 320, 574 320"
             fill="none"
             stroke="#F47435"
             strokeWidth="1"
@@ -123,7 +123,7 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
             opacity="0.5"
             markerEnd="url(#flow-arrow-ember)"
           />
-          <text x={605} y={205} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.7">
+          <text x={418} y={235} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.7">
             × 3 retries
           </text>
 

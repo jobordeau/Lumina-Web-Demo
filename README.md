@@ -78,9 +78,7 @@ lumina-demo/
 │   ├── page.tsx                  # Landing — composition des sections home
 │   ├── globals.css               # Variables CSS, thème, utilitaires
 │   ├── architecture/page.tsx     # Diagramme interactif des ressources
-│   ├── demo/page.tsx             # 🚧 À venir — démo de flux animée
-│   ├── cost/page.tsx             # 🚧 À venir — calculateur TCO
-│   └── code/page.tsx             # 🚧 À venir — snippets C# / Terraform
+│   └── demo/page.tsx             # Démo live branchée sur l'APIM réel
 │
 ├── components/
 │   ├── nav/Nav.tsx               # Navigation top sticky

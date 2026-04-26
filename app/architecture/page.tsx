@@ -24,8 +24,8 @@ export default function ArchitecturePage() {
             transition={{ delay: 0.1, duration: 0.7 }}
             className="display-tight text-display-lg text-balance max-w-5xl"
           >
-            Quatre flux,{" "}
-            <span className="display-italic text-lumina">douze ressources</span>,
+            Trois flux,{" "}
+            <span className="display-italic text-lumina">douze composants</span>,
             une seule source de vérité.
           </motion.h1>
 
@@ -37,13 +37,13 @@ export default function ArchitecturePage() {
           >
             <div className="md:col-span-7">
               <p className="text-ink-700 leading-relaxed">
-                L'architecture distingue quatre flux clairement séparés : le{" "}
-                <span className="text-lumina">flux transactionnel</span> qui
+                L'architecture distingue trois flux clairement séparés : le{" "}
+                <span className="text-lumina">flux d'ingestion</span> qui
                 porte la commande de bout-en-bout, la <span className="text-ember">résilience DLQ</span>{" "}
-                qui capture les erreurs sans perdre de message, le{" "}
+                qui capture les erreurs sans perdre de message, et le{" "}
                 <span className="text-signal">flux analytique Zero-Copy</span>{" "}
-                vers Microsoft Fabric, et la couche transverse{" "}
-                identité &amp; observabilité utilisée par tous les autres.
+                vers Microsoft Fabric. Le Key Vault, utilisé uniquement par le Producer,
+                est représenté en annotation au-dessus de celui-ci.
               </p>
             </div>
             <div className="md:col-span-4 md:col-start-9">
@@ -77,9 +77,15 @@ export default function ArchitecturePage() {
             </div>
             <div className="md:col-span-9">
               <h2 className="display-tight text-display-md text-balance">
-                Toutes les ressources,{" "}
+                Les douze composants,{" "}
                 <span className="display-italic text-lumina">leur rôle exact</span>.
               </h2>
+              <p className="mt-4 text-ink-700 text-sm leading-relaxed max-w-2xl">
+                Le diagramme ci-dessus visualise les onze composants impliqués dans le
+                flux. La douzième entrée (GetOrderStatusFunction) est une route HTTP
+                additionnelle exposée par la même Function App, dédiée au polling
+                de la démo — non visualisée pour préserver la lisibilité.
+              </p>
             </div>
           </div>
 

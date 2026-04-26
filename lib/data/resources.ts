@@ -28,14 +28,16 @@ export const resources: AzureResource[] = [
     name: "apim-lumina-dev-jobordeau",
     type: "API Management",
     category: "ingress",
-    role: "Point d'entrée HTTP sécurisé",
+    role: "Point d'entrée HTTP public",
     description:
-      "Reçoit les commandes E-commerce, applique un rate-limiting, ajoute le header X-Source-System, puis route vers l'Azure Function.",
+      "Reçoit les commandes E-commerce, applique CORS et rate-limiting, ajoute le header X-Source-System, puis route vers l'Azure Function. Expose aussi l'endpoint GET /orders/{id}/status pour le polling de la démo.",
     config: [
       { label: "SKU", value: "Consumption" },
-      { label: "Rate limit", value: "60 calls / min" },
-      { label: "Auth", value: "Subscription key + IP filtering" },
+      { label: "Rate limit", value: "30 calls / 60 sec" },
+      { label: "CORS", value: "Allow-origin: *" },
+      { label: "Auth", value: "Anonymous (subscription_required = false)" },
       { label: "Backend", value: "fn-lumina-processor" },
+      { label: "Operations", value: "POST /orders · GET /orders/{id}/status" },
     ],
     azIcon: "APIM",
   },
@@ -46,12 +48,14 @@ export const resources: AzureResource[] = [
     category: "compute",
     role: "Producteur — JSON brut → Modèle canonique → Service Bus",
     description:
-      "Désérialise le payload e-commerce, mappe vers le modèle canonique Order, valide via FluentValidation puis publie dans le Topic Service Bus.",
+      "Désérialise le payload e-commerce, mappe vers le modèle canonique Order, valide via FluentValidation côté entrée (fail-fast 400) puis publie dans le Topic Service Bus. MessageId du bus = OrderId pour traçabilité bout-en-bout.",
     config: [
       { label: "Runtime", value: ".NET 8 Isolated Worker" },
       { label: "Plan", value: "Linux Consumption" },
       { label: "Identité", value: "System Assigned Managed Identity" },
       { label: "Validation", value: "FluentValidation (OrderValidator)" },
+      { label: "Auth", value: "Anonymous (exposé via APIM)" },
+      { label: "Réponse", value: "202 Accepted ou 400 BadRequest" },
     ],
     azIcon: "FN",
   },
@@ -100,6 +104,23 @@ export const resources: AzureResource[] = [
       { label: "Trigger", value: "sbs-process-order/$DeadLetterQueue" },
       { label: "Container cible", value: "failed-orders" },
       { label: "Format de fichier", value: "failed-order-{messageId}.json" },
+    ],
+    azIcon: "FN",
+  },
+  {
+    id: "fn-status",
+    name: "GetOrderStatusFunction",
+    type: "Azure Function — HTTP Trigger",
+    category: "compute",
+    role: "Lookup du statut d'une commande dans le Data Lake",
+    description:
+      "Endpoint GET /orders/{orderId}/status interrogé en polling par le portfolio pour savoir si une commande est dans gold-orders, failed-orders, ou encore en transit.",
+    config: [
+      { label: "Trigger", value: "HttpTrigger · GET" },
+      { label: "Route", value: "orders/{orderId}/status" },
+      { label: "Containers consultés", value: "gold-orders + failed-orders" },
+      { label: "Auth", value: "Anonymous (exposé via APIM)" },
+      { label: "Réponse", value: "completed · dead-lettered · pending" },
     ],
     azIcon: "FN",
   },
@@ -195,22 +216,6 @@ export const resources: AzureResource[] = [
       { label: "Permissions Function", value: "Get, List" },
     ],
     azIcon: "KV",
-  },
-  {
-    id: "appinsights",
-    name: "appi-lumina-dev",
-    type: "Application Insights",
-    category: "observability",
-    role: "Télémétrie unifiée + KQL",
-    description:
-      "Connecté à toutes les Functions. Logs, métriques, traces distribuées. Smart Detection actif. Action Group qui notifie en cas d'anomalie.",
-    config: [
-      { label: "Type", value: "Workspace-based" },
-      { label: "Sampling", value: "Adaptive (5%)" },
-      { label: "Smart Detection", value: "Activé" },
-      { label: "Action Group", value: "ag-lumina-alerts" },
-    ],
-    azIcon: "AI",
   },
 ];
 

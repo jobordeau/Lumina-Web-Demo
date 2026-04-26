@@ -7,7 +7,7 @@ const steps = [
     num: "01",
     label: "Ingress",
     title: "APIM reçoit la requête",
-    text: "L'API Management applique le rate-limiting (60 req/min), valide la subscription key, ajoute un header X-Source-System, puis route la requête vers la Function HTTP.",
+    text: "L'API Management applique le rate-limiting (30 req/min), ajoute un header X-Source-System, et applique la policy CORS, puis route la requête vers la Function HTTP.",
     code: "POST /orders → apim-lumina-dev-jobordeau",
     tone: "lumina" as const,
   },
@@ -48,7 +48,7 @@ const steps = [
     label: "Résilience",
     title: "Retry · DLQ · Alerte",
     text: "À tout moment un message peut échouer. Service Bus rejoue 3 fois (MaxDeliveryCount), puis bascule en Dead-Letter Queue. Une Function dédiée capture le message mort, le persiste dans failed-orders, et déclenche une Logic App via Event Grid.",
-    code: "× 3 retries → DLQ → FailedOrderFn → failed-orders/ → Event Grid → Logic App",
+    code: "× 3 retries → DLQ → FailedOrderFunction → failed-orders/ → Event Grid → Logic App",
     tone: "ember" as const,
   },
 ];
@@ -66,15 +66,14 @@ export default function Story() {
               <br />
               <span className="display-italic text-lumina">six étapes</span>,
               <br />
-              douze ressources.
+              douze composants.
             </h2>
             <div className="space-y-4 text-ink-700 leading-relaxed">
               <p>
                 Une commande e-commerce arrive sur l'endpoint HTTP. Quelques secondes plus
-                tard, elle est canonisée, persistée, indexée pour l'analytique, et
-                {" "}
-                <span className="text-ink-900">observable</span> de bout-en-bout dans
-                App Insights.
+                tard, elle est canonisée, validée par <span className="text-ink-900">FluentValidation</span>,
+                persistée dans le Data Lake, puis indexée pour l'analytique{" "}
+                <span className="text-ink-900">Microsoft Fabric</span>.
               </p>
               <p>
                 Voici ce qui se passe entre le moment où le client clique{" "}

@@ -20,8 +20,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li><Link href="/" className="text-ink-700 hover:text-lumina transition-colors">Aperçu</Link></li>
             <li><Link href="/architecture" className="text-ink-700 hover:text-lumina transition-colors">Architecture</Link></li>
-            <li><Link href="/demo" className="text-ink-700 hover:text-lumina transition-colors">Démo live</Link></li>
-            <li><Link href="/cost" className="text-ink-700 hover:text-lumina transition-colors">Coût</Link></li>
+            <li><Link href="/demo" className="text-ink-700 hover:text-lumina transition-colors">Démo</Link></li>
           </ul>
         </div>
 
@@ -29,9 +28,9 @@ export default function Footer() {
           <p className="eyebrow eyebrow-dot mb-4">Stack technique</p>
           <ul className="space-y-2 text-sm font-mono text-ink-500">
             <li>.NET 8 · Azure Functions Isolated Worker</li>
-            <li>Azure Service Bus · Event Grid · Logic Apps</li>
+            <li>APIM · Service Bus · Event Grid · Logic Apps</li>
             <li>ADLS Gen2 · Data Factory · Microsoft Fabric</li>
-            <li>Terraform · GitHub Actions · App Insights</li>
+            <li>Terraform · GitHub Actions · FluentValidation</li>
           </ul>
         </div>
       </div>

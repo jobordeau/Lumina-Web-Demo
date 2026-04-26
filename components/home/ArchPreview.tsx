@@ -15,7 +15,7 @@ export default function ArchPreview() {
           <div className="md:col-span-9">
             <h2 className="display-tight text-display-md text-balance">
               Trois flux,{" "}
-              <span className="display-italic text-lumina">douze ressources</span>,
+              <span className="display-italic text-lumina">douze composants</span>,
               <br className="hidden md:block" /> une seule source de vérité.
             </h2>
             <p className="text-ink-700 mt-6 max-w-2xl">
@@ -104,9 +104,9 @@ function FlowSVG() {
       <line x1="296" y1="100" x2="384" y2="100" stroke="#D9F84A" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-l)" />
       <line x1="446" y1="100" x2="534" y2="100" stroke="#D9F84A" strokeWidth="1" opacity="0.6" markerEnd="url(#prev-arrow-l)" />
 
-      {/* === Service Bus → Consumer Fn (lane 2) === */}
+      {/* === Service Bus → Consumer (from RIGHT of SB at 611,100 to TOP of Consumer at 700,198) === */}
       <path
-        d="M 596 100 Q 670 100 670 150 L 670 199"
+        d="M 611 100 C 660 100, 700 145, 700 198"
         fill="none"
         stroke="#7BD8B5"
         strokeWidth="1"
@@ -114,9 +114,9 @@ function FlowSVG() {
         markerEnd="url(#prev-arrow-s)"
       />
 
-      {/* === Service Bus → DLQ Fn (lane 3) === */}
+      {/* === Service Bus → DLQ (from bottom of SB at 565,122 to LEFT side of DLQ at 654,340) === */}
       <path
-        d="M 596 115 Q 660 115 670 200 L 670 319"
+        d="M 565 122 C 565 280, 580 340, 654 340"
         fill="none"
         stroke="#F47435"
         strokeWidth="1"
@@ -124,7 +124,7 @@ function FlowSVG() {
         opacity="0.65"
         markerEnd="url(#prev-arrow-e)"
       />
-      <text x={685} y={245} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.75">
+      <text x={528} y={245} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.75">
         × 3 retries
       </text>
 
@@ -144,7 +144,7 @@ function FlowSVG() {
         <animateMotion
           dur="6s"
           repeatCount="indefinite"
-          path="M 100,100 L 565,100 Q 670,100 670,220 L 1150,220"
+          path="M 100,100 L 611,100 C 660,100 700,145 700,220 L 1150,220"
         />
         <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite" />
       </circle>
@@ -154,7 +154,7 @@ function FlowSVG() {
           dur="6s"
           repeatCount="indefinite"
           begin="2s"
-          path="M 565,115 Q 670,115 670,340 L 1150,340"
+          path="M 565,122 C 565,280 580,340 700,340 L 1150,340"
         />
         <animate attributeName="opacity" values="0;1;1;0" dur="6s" begin="2s" repeatCount="indefinite" />
       </circle>
@@ -163,17 +163,17 @@ function FlowSVG() {
       {/* Lane 1 — Ingestion (lumina) */}
       <Node x={100} y={100} label="Client" sub="E-commerce" tone="muted" />
       <Node x={265} y={100} label="APIM" sub="apim-lumina" tone="lumina" />
-      <Node x={415} y={100} label="Producer Fn" sub="EcommerceOrderFn" tone="lumina" />
+      <Node x={415} y={100} label="Producer" sub="EcommerceOrderFn" tone="lumina" />
       <Node x={565} y={100} label="Service Bus" sub="sbt-lumina-orders" tone="lumina" />
 
       {/* Lane 2 — Data + Analytics (signal) */}
-      <Node x={700} y={220} label="Consumer Fn" sub="OrderProcessor" tone="signal" />
+      <Node x={700} y={220} label="Consumer" sub="OrderProcessor" tone="signal" />
       <Node x={850} y={220} label="Data Lake" sub="gold-orders" tone="signal" />
       <Node x={1000} y={220} label="Data Factory" sub="JSON → Parquet" tone="signal" />
       <Node x={1150} y={220} label="Fabric" sub="Zero-Copy" tone="signal" />
 
       {/* Lane 3 — Resilience (ember) */}
-      <Node x={700} y={340} label="DLQ Fn" sub="FailedOrderFn" tone="ember" />
+      <Node x={700} y={340} label="DLQ" sub="FailedOrderFn" tone="ember" />
       <Node x={850} y={340} label="failed-orders" sub="container" tone="ember" />
       <Node x={1000} y={340} label="Event Grid" sub="BlobCreated" tone="ember" />
       <Node x={1150} y={340} label="Logic App" sub="Email alerte" tone="ember" />

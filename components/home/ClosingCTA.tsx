@@ -38,13 +38,13 @@ export default function ClosingCTA() {
               href="/demo"
               className="group inline-flex items-center gap-3 bg-lumina text-ink-0 px-8 py-4 hover:bg-lumina-glow transition-all"
             >
-              <span className="font-medium tracking-tight">Lancer la démo live</span>
+              <span className="font-medium tracking-tight">Lancer la démo</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           <p className="mt-12 font-mono text-[0.7rem] text-ink-500 tracking-widest uppercase">
-            <span className="text-lumina">↓</span> 100% client-side · pas d'appel Azure réel · démo reproductible offline
+            <span className="text-lumina">↓</span> Vrais appels HTTP · APIM réel · polling sur Data Lake
           </p>
         </motion.div>
       </div>

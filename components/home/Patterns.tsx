@@ -43,8 +43,8 @@ const patterns = [
     icon: GitBranch,
     title: "Infrastructure as Code",
     badge: "DevOps",
-    text: "Tout le Resource Group est codé en HCL. CI GitHub Actions qui compile le C# .NET 8 et déploie la Function. Une PR = un changement d'infrastructure auditable.",
-    code: "terraform plan → apply via OIDC",
+    text: "Tout le Resource Group est codé en HCL. Workflow GitHub Actions qui compile le C# .NET 8 et déploie sur le Function App à chaque push. Une PR = un changement d'infrastructure auditable.",
+    code: "src/** push → dotnet publish → Functions Action deploy",
   },
 ];
 

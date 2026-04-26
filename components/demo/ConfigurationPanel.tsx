@@ -17,6 +17,8 @@ interface ConfigurationPanelProps {
   scenarioId: ScenarioId | null;
   phase: DemoPhase;
   customPayload: OrderPayload;
+  lastOrderId: string | null;
+  runCount: number;
   onModeChange: (mode: Mode) => void;
   onSelectPreset: (id: ScenarioId) => void;
   onCustomPayloadChange: (payload: OrderPayload) => void;
@@ -32,7 +34,7 @@ const isComplete = (phase: DemoPhase) =>
   phase === "validation-failed" || phase === "timeout" || phase === "error";
 
 export default function ConfigurationPanel(props: ConfigurationPanelProps) {
-  const { mode, scenarioId, phase, customPayload, onModeChange, onSelectPreset, onRun, onReset, onCustomPayloadChange } = props;
+  const { mode, scenarioId, phase, customPayload, lastOrderId, runCount, onModeChange, onSelectPreset, onRun, onReset, onCustomPayloadChange } = props;
 
   const running = isRunning(phase);
   const complete = isComplete(phase);
@@ -109,6 +111,27 @@ export default function ConfigurationPanel(props: ConfigurationPanelProps) {
 
       {/* Controls */}
       <div className="border-t border-hairline p-4 space-y-2 bg-ink-0">
+        {/* Last sent OrderId (visual proof of uniqueness) */}
+        {lastOrderId && (
+          <motion.div
+            key={lastOrderId}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="border-l-2 border-lumina/40 pl-2.5 py-1 mb-3"
+          >
+            <p className="font-mono text-[0.6rem] tracking-widest uppercase text-ink-500 leading-tight">
+              {runCount > 0 ? `Run #${runCount} · OrderId envoyé` : "Dernier OrderId"}
+            </p>
+            <p className="font-mono text-[0.7rem] text-lumina break-all leading-tight mt-0.5">
+              {lastOrderId}
+            </p>
+            <p className="font-mono text-[0.6rem] text-ink-500 leading-tight mt-1">
+              ↻ un nouvel ID sera généré au prochain envoi
+            </p>
+          </motion.div>
+        )}
+
         <button
           onClick={onRun}
           disabled={!canRun || running}

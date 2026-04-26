@@ -16,6 +16,7 @@ import PayloadInspector from "@/components/demo/PayloadInspector";
 export default function DemoPage() {
   const [state, dispatch] = useReducer(demoReducer, initialState);
   const [customPayload, setCustomPayload] = useState<OrderPayload>(() => buildEmptyCustomPayload());
+  const [runCount, setRunCount] = useState(0);
 
   // Cancellation flag — toggled when reset is hit so the runner aborts cleanly
   const cancelledRef = useRef(false);
@@ -23,6 +24,7 @@ export default function DemoPage() {
   const handleModeChange = (mode: Mode) => {
     cancelledRef.current = true;
     dispatch({ type: "SET_MODE", mode });
+    setRunCount(0);
     if (mode === "custom") {
       // Refresh the OrderId so each entry into custom mode gets a fresh one
       setCustomPayload(buildEmptyCustomPayload());
@@ -31,6 +33,7 @@ export default function DemoPage() {
 
   const handleSelectPreset = (id: ScenarioId) => {
     dispatch({ type: "SELECT_PRESET", scenarioId: id });
+    setRunCount(0);
   };
 
   const handleReset = () => {
@@ -56,6 +59,8 @@ export default function DemoPage() {
       payload = { ...customPayload, orderId: generateOrderId(), timestamp: new Date().toISOString() };
       setCustomPayload(payload); // reflect the regenerated id in the form
     }
+
+    setRunCount((n) => n + 1);
 
     runDemoCycle({
       payload,
@@ -131,6 +136,8 @@ export default function DemoPage() {
                 scenarioId={state.scenarioId}
                 phase={state.phase}
                 customPayload={customPayload}
+                lastOrderId={state.orderId}
+                runCount={runCount}
                 onModeChange={handleModeChange}
                 onSelectPreset={handleSelectPreset}
                 onCustomPayloadChange={setCustomPayload}

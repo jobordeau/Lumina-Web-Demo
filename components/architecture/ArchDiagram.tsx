@@ -117,27 +117,28 @@ function LegendItem({
 //
 // LANE LAYOUT (role-coherent — each lane has ONE color identity):
 //
-//   Lane 1 (LUMINA, y=120)  Ingestion + orchestration
+//   Lane 1 (LUMINA, y=160)  Ingestion + orchestration
 //   ────────────────────────────────────────────────────
-//   [Client] [APIM] [Producer Fn] [Service Bus] ──┐
-//                                                 │
-//                                                 ├─→ Consumer Fn (lane 2)
-//                                                 │
-//                                                 └─→ DLQ Fn (lane 3)
+//   [Client] [APIM] [Producer] [Service Bus] ──┐
+//                       ▲                      │
+//                       │ (Key Vault pin)      │
+//                                              ├─→ Consumer (lane 2, top side)
+//                                              │
+//                                              └─→ DLQ (lane 3, left side)
 //
-//   Lane 2 (SIGNAL, y=280)  Données + analytique
+//   Lane 2 (SIGNAL, y=320)  Données + analytique
 //   ────────────────────────────────────────────────────
-//                            [Consumer Fn] → [gold-orders] → [ADF] → [Fabric]
+//                            [Consumer] → [gold-orders] → [ADF] → [Fabric]
 //
-//   Lane 3 (EMBER, y=440)  Résilience + DLQ
+//   Lane 3 (EMBER, y=480)  Résilience + DLQ
 //   ────────────────────────────────────────────────────
-//                            [DLQ Fn] → [failed-orders] → [Event Grid] → [Logic App]
+//                            [DLQ] → [failed-orders] → [Event Grid] → [Logic App]
 //
-//   Lane 4 (MUTED, y=600)  Transverse (identité + observabilité)
-//   ────────────────────────────────────────────────────
-//   [Key Vault]            [App Insights]
+// Key Vault is a transverse identity component used only by the Producer.
+// Rendered as a small annotation pin above the Producer block — not a regular
+// node — to avoid wasting an entire swimlane on a single resource.
 //
-// ViewBox: 1620 × 680 — accommodates 8 columns and 4 lanes with labels above each.
+// ViewBox: 1620 × 580
 
 interface NodePosition {
   id: string;
@@ -149,10 +150,9 @@ interface NodePosition {
 }
 
 const LANE_Y = {
-  L1: 120, // Ingestion
-  L2: 280, // Data + Analytics
-  L3: 440, // Resilience
-  L4: 600, // Transverse
+  L1: 160, // Ingestion
+  L2: 320, // Data
+  L3: 480, // Resilience
 };
 
 const COL_X = {
@@ -170,25 +170,23 @@ const nodes: NodePosition[] = [
   // Lane 1 — Ingestion + orchestration (LUMINA)
   { id: "client", x: COL_X.A, y: LANE_Y.L1, label: "Client", sub: "E-commerce", tone: "muted" },
   { id: "apim", x: COL_X.B, y: LANE_Y.L1, label: "APIM", sub: "apim-lumina-dev", tone: "lumina" },
-  { id: "fn-producer", x: COL_X.C, y: LANE_Y.L1, label: "Producer Fn", sub: "EcommerceOrderFn", tone: "lumina" },
+  { id: "fn-producer", x: COL_X.C, y: LANE_Y.L1, label: "Producer", sub: "EcommerceOrderFn", tone: "lumina" },
   { id: "servicebus", x: COL_X.D, y: LANE_Y.L1, label: "Service Bus", sub: "sbt-lumina-orders", tone: "lumina" },
 
   // Lane 2 — Data + analytics (SIGNAL)
-  { id: "fn-consumer", x: COL_X.E, y: LANE_Y.L2, label: "Consumer Fn", sub: "OrderProcessor", tone: "signal" },
+  { id: "fn-consumer", x: COL_X.E, y: LANE_Y.L2, label: "Consumer", sub: "OrderProcessor", tone: "signal" },
   { id: "adls", x: COL_X.F, y: LANE_Y.L2, label: "Data Lake", sub: "gold-orders", tone: "signal" },
   { id: "adf", x: COL_X.G, y: LANE_Y.L2, label: "Data Factory", sub: "JSON → Parquet", tone: "signal" },
   { id: "fabric", x: COL_X.H, y: LANE_Y.L2, label: "Fabric", sub: "Zero-Copy", tone: "signal" },
 
   // Lane 3 — Resilience + DLQ (EMBER)
-  { id: "fn-dlq", x: COL_X.E, y: LANE_Y.L3, label: "DLQ Fn", sub: "FailedOrderFn", tone: "ember" },
+  { id: "fn-dlq", x: COL_X.E, y: LANE_Y.L3, label: "DLQ", sub: "FailedOrderFn", tone: "ember" },
   { id: "adls-failed", x: COL_X.F, y: LANE_Y.L3, label: "failed-orders", sub: "container", tone: "ember" },
   { id: "eventgrid", x: COL_X.G, y: LANE_Y.L3, label: "Event Grid", sub: "BlobCreated", tone: "ember" },
   { id: "logicapp", x: COL_X.H, y: LANE_Y.L3, label: "Logic App", sub: "Email alerte", tone: "ember" },
-
-  // Lane 4 — Transverse (MUTED)
-  { id: "kv", x: COL_X.C, y: LANE_Y.L4, label: "Key Vault", sub: "kv-lumina-dev", tone: "muted" },
-  { id: "appinsights", x: COL_X.E, y: LANE_Y.L4, label: "App Insights", sub: "Télémétrie", tone: "muted" },
 ];
+
+// Key Vault is rendered as a small pin above the Producer block (see KeyVaultPin component below).
 
 const TONE_COLORS = {
   lumina: "#D9F84A",
@@ -197,7 +195,7 @@ const TONE_COLORS = {
   muted: "rgba(250,247,240,0.4)",
 };
 
-// Map node visual id → resource panel id (for nodes that visually represent something else)
+// Map node visual id → resource panel id
 const NODE_TO_RESOURCE: Record<string, string> = {
   apim: "apim",
   "fn-producer": "fn-producer",
@@ -207,11 +205,10 @@ const NODE_TO_RESOURCE: Record<string, string> = {
   adf: "adf",
   fabric: "fabric",
   "fn-dlq": "fn-dlq",
-  "adls-failed": "adls", // failed-orders container is part of the same ADLS resource
+  "adls-failed": "adls",
   eventgrid: "eventgrid",
   logicapp: "logicapp",
   kv: "kv",
-  appinsights: "appinsights",
 };
 
 function DiagramSVG({
@@ -229,7 +226,7 @@ function DiagramSVG({
 }) {
   return (
     <svg
-      viewBox="0 0 1620 680"
+      viewBox="0 0 1620 580"
       className="w-full h-auto min-w-[1100px]"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -246,46 +243,52 @@ function DiagramSVG({
         <marker id="arrow-ember" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
           <path d="M0,0 L0,6 L9,3 z" fill="#F47435" opacity="0.7" />
         </marker>
+        <marker id="arrow-muted" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto">
+          <path d="M0,0 L0,5 L7,2.5 z" fill="rgba(250,247,240,0.4)" />
+        </marker>
       </defs>
 
       {/* Background grid */}
-      <rect width="1620" height="680" fill="url(#dotgrid-arch)" />
+      <rect width="1620" height="580" fill="url(#dotgrid-arch)" />
 
-      {/* Swimlane labels */}
-      <SwimlaneLabel y={50} text="① INGESTION · ORCHESTRATION" color="#D9F84A" />
-      <SwimlaneLabel y={210} text="② DONNÉES · DU GOLD AU LAKEHOUSE FABRIC" color="#7BD8B5" />
-      <SwimlaneLabel y={370} text="③ RÉSILIENCE · DEAD-LETTER QUEUE" color="#F47435" />
-      <SwimlaneLabel y={530} text="④ TRANSVERSE · IDENTITÉ &amp; OBSERVABILITÉ" color="rgba(250,247,240,0.45)" />
+      {/* Swimlane labels — 3 lanes only */}
+      <SwimlaneLabel y={90} text="① INGESTION · ORCHESTRATION" color="#D9F84A" />
+      <SwimlaneLabel y={250} text="② DONNÉES · DU GOLD AU LAKEHOUSE FABRIC" color="#7BD8B5" />
+      <SwimlaneLabel y={410} text="③ RÉSILIENCE · DEAD-LETTER QUEUE" color="#F47435" />
 
       {/* Subtle swimlane separators (between lanes) */}
-      <line x1="60" y1="200" x2="1580" y2="200" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
-      <line x1="60" y1="360" x2="1580" y2="360" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
-      <line x1="60" y1="520" x2="1580" y2="520" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      <line x1="60" y1="240" x2="1580" y2="240" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+      <line x1="60" y1="400" x2="1580" y2="400" stroke="rgba(250,247,240,0.06)" strokeWidth="1" />
+
+      {/* ============ KEY VAULT PIN (small annotation above Producer) ============ */}
+      {/* Producer is at (530, 160), top edge at y=134. Key Vault pin sits at (530, 80) */}
+      <KeyVaultPin x={530} y={80} onSelect={onSelect} isSelected={selectedId === "kv"} isHover={hoveredId === "kv-pin"} onHover={onHover} />
+      {/* Connection line: KV pin (530, 96) → Producer top (530, 134) */}
+      <line x1={530} y1={96} x2={530} y2={134} stroke="rgba(250,247,240,0.4)" strokeWidth="0.85" strokeDasharray="2 3" markerEnd="url(#arrow-muted)" />
 
       {/* ============ CONNECTION LINES ============ */}
 
-      {/* --- Lane 1 internal: Client → APIM → Producer Fn → Service Bus --- */}
-      <FlowLine from={[176, 120]} to={[284, 120]} color="lumina" arrow />
-      <FlowLine from={[376, 120]} to={[484, 120]} color="lumina" arrow />
-      <FlowLine from={[576, 120]} to={[684, 120]} color="lumina" arrow />
+      {/* --- Lane 1 internal: Client → APIM → Producer → Service Bus --- */}
+      <FlowLine from={[176, 160]} to={[284, 160]} color="lumina" arrow />
+      <FlowLine from={[376, 160]} to={[484, 160]} color="lumina" arrow />
+      <FlowLine from={[576, 160]} to={[684, 160]} color="lumina" arrow />
 
-      {/* --- Service Bus → Consumer Fn (down to lane 2, going right) --- */}
-      {/* Two-segment path: right then down-right */}
+      {/* --- Service Bus → Consumer (from RIGHT side of SB at 776,160 to TOP of Consumer at 930,294) --- */}
       <path
-        d="M 776 120 Q 853 120 853 175 L 853 254"
+        d="M 776 160 C 870 160, 930 220, 930 294"
         fill="none"
         stroke="#7BD8B5"
         strokeWidth="1.25"
         opacity="0.7"
         markerEnd="url(#arrow-signal)"
       />
-      <text x={865} y={150} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#7BD8B5" opacity="0.85">
+      <text x={830} y={205} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#7BD8B5" opacity="0.85">
         sbs-process-order
       </text>
 
-      {/* --- Service Bus → DLQ Fn (down to lane 3, going right with bigger drop) --- */}
+      {/* --- Service Bus → DLQ (from bottom of SB at 730,186 to LEFT side of DLQ at 884,480) --- */}
       <path
-        d="M 776 138 Q 824 138 853 220 L 853 414"
+        d="M 730 186 C 730 380, 770 480, 884 480"
         fill="none"
         stroke="#F47435"
         strokeWidth="1.25"
@@ -293,51 +296,43 @@ function DiagramSVG({
         opacity="0.7"
         markerEnd="url(#arrow-ember)"
       />
-      <text x={865} y={328} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
+      <text x={745} y={345} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
         × 3 retries
       </text>
-      <text x={865} y={342} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
+      <text x={745} y={359} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#F47435" opacity="0.85">
         $DeadLetterQueue
       </text>
 
-      {/* --- Lane 2 internal: Consumer Fn → gold-orders → ADF → Fabric --- */}
-      <FlowLine from={[976, 280]} to={[1084, 280]} color="signal" arrow />
-      <FlowLine from={[1176, 280]} to={[1284, 280]} color="signal" arrow />
-      <FlowLine from={[1376, 280]} to={[1484, 280]} color="signal" arrow dashed />
+      {/* --- Lane 2 internal: Consumer → gold-orders → ADF → Fabric --- */}
+      <FlowLine from={[976, 320]} to={[1084, 320]} color="signal" arrow />
+      <FlowLine from={[1176, 320]} to={[1284, 320]} color="signal" arrow />
+      <FlowLine from={[1376, 320]} to={[1484, 320]} color="signal" arrow dashed />
 
-      {/* --- Lane 3 internal: DLQ Fn → failed-orders → Event Grid → Logic App --- */}
-      <FlowLine from={[976, 440]} to={[1084, 440]} color="ember" arrow />
-      <FlowLine from={[1176, 440]} to={[1284, 440]} color="ember" arrow dashed />
-      <FlowLine from={[1376, 440]} to={[1484, 440]} color="ember" arrow />
-
-      {/* --- Cross-cutting: Functions → Key Vault & App Insights (very faint dashed) --- */}
-      {/* Producer Fn → Key Vault (same column C, vertical) */}
-      <line x1={530} y1={146} x2={530} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
-      {/* Consumer Fn → App Insights (same column E, vertical) */}
-      <line x1={930} y1={306} x2={930} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
-      {/* DLQ Fn → App Insights (same column E, vertical) */}
-      <line x1={930} y1={466} x2={930} y2={574} stroke="rgba(250,247,240,0.18)" strokeWidth="0.75" strokeDasharray="2 4" />
+      {/* --- Lane 3 internal: DLQ → failed-orders → Event Grid → Logic App --- */}
+      <FlowLine from={[976, 480]} to={[1084, 480]} color="ember" arrow />
+      <FlowLine from={[1176, 480]} to={[1284, 480]} color="ember" arrow dashed />
+      <FlowLine from={[1376, 480]} to={[1484, 480]} color="ember" arrow />
 
       {/* ============ ANIMATED FLOW DOTS ============ */}
       {animating && (
         <>
-          {/* Happy path: Client → APIM → Producer → Service Bus → Consumer Fn → ADLS → ADF → Fabric */}
+          {/* Happy path: Client → APIM → Producer → Service Bus → Consumer → ADLS → ADF → Fabric */}
           <circle r="4" fill="#D9F84A">
             <animateMotion
               dur="6s"
               repeatCount="indefinite"
-              path="M 130,120 L 730,120 Q 853,120 853,280 L 1530,280"
+              path="M 130,160 L 776,160 C 870,160 930,220 930,320 L 1530,320"
             />
             <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite" />
           </circle>
 
-          {/* Resilience path: Service Bus → DLQ Fn → failed-orders → Event Grid → Logic App */}
+          {/* Resilience path: Service Bus → DLQ → failed-orders → Event Grid → Logic App */}
           <circle r="3.5" fill="#F47435">
             <animateMotion
               dur="6s"
               repeatCount="indefinite"
               begin="2s"
-              path="M 730,138 Q 853,138 853,440 L 1530,440"
+              path="M 730,186 C 730,380 770,480 884,480 L 1530,480"
             />
             <animate
               attributeName="opacity"
@@ -492,3 +487,87 @@ function nodeOpacity(isHover: boolean, isSelected: boolean, isMuted: boolean) {
   if (isHover) return 1;
   return 0.95;
 }
+
+/**
+ * Key Vault rendered as a small annotation pin instead of a full lane.
+ * Compact (60×30 instead of 92×52), positioned just above the Producer block.
+ * Clickable to open the resource panel like any other node.
+ */
+function KeyVaultPin({
+  x,
+  y,
+  onSelect,
+  isSelected,
+  isHover,
+  onHover,
+}: {
+  x: number;
+  y: number;
+  onSelect: (id: string) => void;
+  isSelected: boolean;
+  isHover: boolean;
+  onHover: (id: string | null) => void;
+}) {
+  const c = "rgba(250,247,240,0.4)";
+  return (
+    <g
+      transform={`translate(${x}, ${y})`}
+      onClick={() => onSelect("kv")}
+      onMouseEnter={() => onHover("kv-pin")}
+      onMouseLeave={() => onHover(null)}
+      className="cursor-pointer"
+      opacity={isSelected || isHover ? 1 : 0.7}
+    >
+      {/* Selection ring */}
+      {isSelected && (
+        <rect
+          x={-36}
+          y={-18}
+          width={72}
+          height={36}
+          fill="none"
+          stroke={c}
+          strokeWidth="1"
+          strokeDasharray="2 2"
+          opacity="0.7"
+        />
+      )}
+
+      {/* Compact card */}
+      <rect
+        x={-30}
+        y={-15}
+        width={60}
+        height={30}
+        fill="rgba(10,9,8,0.95)"
+        stroke={c}
+        strokeWidth={isHover || isSelected ? "1" : "0.6"}
+      />
+
+      {/* Tiny lock-style indicator */}
+      <circle cx={-22} cy={-7} r={1.75} fill={c} />
+
+      {/* Label */}
+      <text
+        textAnchor="middle"
+        y={-1}
+        fontSize="9"
+        fontFamily="DM Sans, sans-serif"
+        fontWeight="500"
+        fill="#FAF7F0"
+      >
+        Key Vault
+      </text>
+      <text
+        textAnchor="middle"
+        y={9}
+        fontSize="7"
+        fontFamily="JetBrains Mono, monospace"
+        fill="rgba(250,247,240,0.5)"
+      >
+        passwordless
+      </text>
+    </g>
+  );
+}
+

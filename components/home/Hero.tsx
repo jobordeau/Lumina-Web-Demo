@@ -106,7 +106,7 @@ export default function Hero() {
             href="/demo"
             className="group inline-flex items-center gap-3 bg-lumina text-ink-0 px-6 py-3.5 hover:bg-lumina-glow transition-all"
           >
-            <span className="font-medium tracking-tight">Lancer la démo live</span>
+            <span className="font-medium tracking-tight">Lancer la démo</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
@@ -117,7 +117,7 @@ export default function Hero() {
             <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
           </Link>
           <span className="font-mono text-xs text-ink-500 md:ml-4">
-            <span className="text-lumina">↓</span> 12 ressources Azure · 3 Functions · 0 secret en clair
+            <span className="text-lumina">↓</span> 12 ressources Azure · 4 Functions · 0 secret en clair
           </span>
         </motion.div>
       </div>
