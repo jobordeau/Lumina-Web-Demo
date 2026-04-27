@@ -6,37 +6,36 @@ import { ArrowUpRight, ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative pt-32 md:pt-40 pb-20 overflow-hidden">
+    <section className="relative pt-24 md:pt-28 pb-12 md:pb-16 overflow-hidden">
       {/* Background ambient grid */}
       <BackgroundGrid />
 
       <div className="container-custom relative">
-        {/* Top metadata strip */}
+        {/* Top metadata strip — 3 items now (no Édition) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 pb-10 border-b border-hairline"
+          className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 pb-6 md:pb-8 border-b border-hairline"
         >
           <Meta label="Cas client" value="E-commerce / EAI" />
           <Meta label="Architecture" value="Cloud-Native · Serverless" />
           <Meta label="Pattern" value="Event-Driven Pub/Sub" />
-          <Meta label="Édition" value="2026 — Phase 2" />
         </motion.div>
 
         {/* Main headline */}
-        <div className="pt-16 md:pt-24 pb-8 grid md:grid-cols-12 gap-8 items-end">
+        <div className="pt-8 md:pt-10 pb-4 grid md:grid-cols-12 gap-6 md:gap-8 items-end">
           <div className="md:col-span-9">
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.6 }}
-              className="eyebrow eyebrow-dot mb-6"
+              className="eyebrow eyebrow-dot mb-4"
             >
               Preuve de Concept · rg-lumina-poc-dev
             </motion.p>
 
-            <h1 className="display-tight text-display-xl text-ink-900 text-balance">
+            <h1 className="display-tight text-display-xl text-ink-900 text-balance leading-[0.95]">
               <motion.span
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -68,7 +67,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className="md:col-span-3 md:pb-4"
+            className="md:col-span-3 md:pb-2"
           >
             <p className="text-ink-700 text-sm leading-relaxed border-l border-lumina pl-4">
               Une POC d'architecture EAI moderne :{" "}
@@ -78,15 +77,15 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Long-form intro */}
+        {/* Long-form intro — tighter top margin */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.7 }}
-          className="grid md:grid-cols-12 gap-8 mt-12"
+          className="grid md:grid-cols-12 gap-8 mt-6 md:mt-8"
         >
-          <div className="md:col-start-4 md:col-span-6">
-            <p className="text-lg md:text-xl text-ink-700 leading-relaxed text-balance">
+          <div className="md:col-start-4 md:col-span-9">
+            <p className="text-base md:text-lg text-ink-700 leading-relaxed text-balance">
               Lumina est une <em className="display-italic text-ink-900 font-normal">preuve de concept</em>{" "}
               de bout-en-bout : APIM, Azure Functions en producteur/consommateur,
               Service Bus avec Dead-Letter Queue, Data Lake Gen2, orchestration
@@ -95,12 +94,12 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* CTA row */}
+        {/* CTA row — tighter top margin */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.6 }}
-          className="mt-16 flex flex-col md:flex-row gap-4 md:items-center"
+          className="mt-8 md:mt-10 flex flex-col md:flex-row gap-4 md:items-center"
         >
           <Link
             href="/demo"
