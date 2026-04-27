@@ -213,7 +213,7 @@ export default function DemoPage() {
                 <NoteBlock
                   num="03"
                   title="État non observable"
-                  text="ADF (pipeline planifié) et Fabric (notebook qui tourne toutes les 30 min) ne peuvent pas être confirmés en direct pendant un run. Pour voir le résultat de Fabric en action, allez sur la page Analytics."
+                  text="ADF (pipeline déclenché par Event Grid sur écriture blob) et Fabric (notebook qui tourne toutes les 30 min) ne peuvent pas être confirmés en direct pendant un run. Pour voir le résultat de Fabric en action, allez sur la page Analytics."
                 />
               </div>
             </div>

@@ -156,7 +156,7 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
           <span className="text-ink-900">vérifiés</span> via l'API. L'état{" "}
           <span className="text-ink-900">non observable</span> représente des composants
           dont l'état ne peut pas être confirmé en direct pendant ce run
-          (ADF et Fabric, qui tournent en mode planifié).
+          (ADF, déclenché par Event Grid sur écriture blob, et Fabric, qui tourne toutes les 30 min).
         </p>
       </div>
     </div>
