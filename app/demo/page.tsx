@@ -212,8 +212,8 @@ export default function DemoPage() {
                 />
                 <NoteBlock
                   num="03"
-                  title="État inferred"
-                  text="ADF (planifié) et Logic App (push depuis Event Grid) ne sont pas observables depuis l'API publique. Leur état est inféré depuis le scénario."
+                  title="État non observable"
+                  text="ADF (pipeline planifié) et Fabric (notebook qui tourne toutes les 30 min) ne peuvent pas être confirmés en direct pendant un run. Pour voir le résultat de Fabric en action, allez sur la page Analytics."
                 />
               </div>
             </div>

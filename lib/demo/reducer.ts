@@ -282,9 +282,10 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
           servicebus: "success",
           "fn-consumer": "success",
           adls: "success",
-          // ADF + Fabric run on schedule, not per-message — mark as inferred
-          adf: "inferred",
-          fabric: "inferred",
+          // ADF runs on storage event (asynchronous), Fabric notebook runs on
+          // a 30-min schedule. Both are observable later via the Analytics page.
+          adf: "deferred",
+          fabric: "deferred",
         };
         newLogs.push(
           nextLog(
@@ -311,9 +312,9 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
           "fn-dlq": "success",
           "adls-failed": "success",
           // Event Grid + Logic App: 'success' when alert blob proves email was sent,
-          // 'inferred' until then (transient state during polling)
-          eventgrid: alertConfirmed ? "success" : "inferred",
-          logicapp: alertConfirmed ? "success" : "inferred",
+          // 'deferred' until then (transient state during polling)
+          eventgrid: alertConfirmed ? "success" : "deferred",
+          logicapp: alertConfirmed ? "success" : "deferred",
         };
         newLogs.push(
           nextLog(

@@ -19,7 +19,7 @@ export type NodeStatus =
   | "success"
   | "error"
   | "retry"
-  | "inferred"; // for downstream nodes we cannot directly observe
+  | "deferred"; // for downstream nodes whose result is observable later (analytics, scheduled jobs)
 
 export type LogLevel = "INF" | "WRN" | "ERR" | "REQ" | "RES";
 

@@ -49,7 +49,7 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
           <StatusLegend dot="bg-lumina animate-pulse" label="active" />
           <StatusLegend dot="bg-signal" label="success" />
           <StatusLegend dot="bg-ember" label="error" />
-          <StatusLegend dot="bg-ink-500 ring-1 ring-ink-400" label="inferred" />
+          <StatusLegend dot="bg-ink-500 ring-1 ring-ink-400" label="non observable" />
         </div>
       </div>
 
@@ -148,14 +148,15 @@ export default function FlowVisualization({ nodeStatuses, phase }: FlowVisualiza
         </svg>
       </div>
 
-      {/* Footer note about 'inferred' */}
+      {/* Footer note about 'non observable' state */}
       <div className="border-t border-hairline px-4 py-2 bg-ink-0">
         <p className="font-mono text-[0.65rem] text-ink-500 leading-relaxed">
           <span className="text-ink-700">●</span> Les états{" "}
           <span className="text-ink-900">success / error</span> sont{" "}
           <span className="text-ink-900">vérifiés</span> via l'API. L'état{" "}
-          <span className="text-ink-900">inferred</span> représente des composants{" "}
-          (ADF planifié, Logic App push) observables uniquement dans le portail Azure.
+          <span className="text-ink-900">non observable</span> représente des composants
+          dont l'état ne peut pas être confirmé en direct pendant ce run
+          (ADF et Fabric, qui tournent en mode planifié).
         </p>
       </div>
     </div>
@@ -211,7 +212,7 @@ function FlowNode({
   const isProcessing = status === "processing";
   const isError = status === "error";
   const isSuccess = status === "success";
-  const isInferred = status === "inferred";
+  const isDeferred = status === "deferred";
   const isRetry = status === "retry";
 
   const strokeColor =
@@ -221,7 +222,7 @@ function FlowNode({
       ? "#7BD8B5"
       : status === "processing"
       ? c
-      : status === "inferred"
+      : status === "deferred"
       ? "rgba(250,247,240,0.4)"
       : "rgba(250,247,240,0.2)";
 
@@ -230,7 +231,7 @@ function FlowNode({
       ? "#F47435"
       : status === "success"
       ? "#7BD8B5"
-      : status === "inferred"
+      : status === "deferred"
       ? "rgba(250,247,240,0.7)"
       : c;
 
@@ -260,7 +261,7 @@ function FlowNode({
         fill="rgba(10,9,8,0.96)"
         stroke={strokeColor}
         strokeWidth={isActive ? "1.5" : "0.85"}
-        strokeDasharray={isInferred ? "3 2" : undefined}
+        strokeDasharray={isDeferred ? "3 2" : undefined}
       />
 
       {/* Status indicator dot */}
@@ -296,7 +297,7 @@ function FlowNode({
           </circle>
         </g>
       )}
-      {isInferred && (
+      {isDeferred && (
         <g transform="translate(34, -13)">
           <circle r="6" fill="rgba(250,247,240,0.15)" stroke="rgba(250,247,240,0.5)" strokeWidth="0.75" />
           <text textAnchor="middle" y="2.5" fontSize="7" fontFamily="JetBrains Mono, monospace" fill="rgba(250,247,240,0.7)">?</text>
@@ -304,7 +305,7 @@ function FlowNode({
       )}
 
       {/* Labels */}
-      <text textAnchor="middle" y={-1} fontSize="11" fontFamily="DM Sans, sans-serif" fontWeight="500" fill={isInferred ? "rgba(250,247,240,0.7)" : "#FAF7F0"}>
+      <text textAnchor="middle" y={-1} fontSize="11" fontFamily="DM Sans, sans-serif" fontWeight="500" fill={isDeferred ? "rgba(250,247,240,0.7)" : "#FAF7F0"}>
         {node.label}
       </text>
       <text textAnchor="middle" y={11} fontSize="8" fontFamily="JetBrains Mono, monospace" fill="rgba(250,247,240,0.5)">
@@ -312,7 +313,7 @@ function FlowNode({
       </text>
 
       {/* Active-state underline */}
-      {isActive && !isInferred && (
+      {isActive && !isDeferred && (
         <line x1={-46} y1={28} x2={46} y2={28} stroke={dotColor} strokeWidth="1.5" />
       )}
     </g>
